@@ -34,7 +34,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 .codec-badge-x264 { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .codec-badge-other { background: linear-gradient(135deg, #6b7280, #4b5563); }
 .loader { border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top: 3px solid #6366f1; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin { 0+ { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .magnet-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); transition: all 0.2s; }
 .magnet-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
 .quality-4k { color: #f87171; }
@@ -44,9 +44,8 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 .error-box { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
 .success-box { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
 .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
-.progress-bar { height: 4px; background: rgba(99,102,241,0.2); border-radius: 2px; overflow: hidden; }
-/* إضافة تأثير transition لجعل حركة الـ width سلسة للغاية وانسيابية */
-.progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.4s ease-in-out; }
+.progress-bar { height: 6px; background: rgba(99,102,241,0.15); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.3s ease-out; }
 </style>
 </head>
 <body class="text-gray-100 min-h-screen">
@@ -244,7 +243,6 @@ function setStatus(msg, type = 'info') {
 }
 function hideStatus() { document.getElementById('statusMsg').classList.add('hidden'); }
 
-// تعديل الدالة لتقوم بإظهار الشريط وتحريك الـ fill بشكل فوري وسلس
 function setProgress(text, percent) {
     const area = document.getElementById('progressArea');
     area.classList.remove('hidden');
@@ -336,7 +334,6 @@ function renderResults() {
 
 async function searchYTS(query) {
     try {
-        setProgress('جاري فحص موقع YTS...', 15);
         const url = 'https://yts.mx/api/v2/list_movies.json?query_term=' + encodeURIComponent(query) + '&sort_by=seeds&order_by=desc&limit=50';
         const result = await smartFetch(url, true, true);
         const data = result.data;
@@ -358,7 +355,6 @@ async function searchYTS(query) {
 
 async function searchTPB(query) {
     try {
-        setProgress('جاري سحب بيانات The Pirate Bay...', 30);
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
         const result = await smartFetch(url, true, false);
         const data = result.data;
@@ -378,7 +374,6 @@ async function searchTPB(query) {
 
 async function searchEZTV(query) {
     try {
-        setProgress('جاري الاتصال بـ EZTV...', 45);
         const url = 'https://eztv.re/api/get-torrents?limit=50&search=' + encodeURIComponent(query);
         const result = await smartFetch(url, true, false);
         const data = result.data;
@@ -398,7 +393,6 @@ async function searchEZTV(query) {
 
 async function searchNyaa(query) {
     try {
-        setProgress('البحث في قاعدة Nyaa Anime...', 60);
         const url = 'https://nyaa.si/?page=rss&term=' + encodeURIComponent(query) + '&c=0_0&f=0';
         const result = await smartFetch(url, false, false);
         const parser = new DOMParser();
@@ -428,7 +422,6 @@ async function searchNyaa(query) {
 
 async function search1337x(query) {
     try {
-        setProgress('جلب التورنت من 1337x...', 75);
         const urlAlt = 'https://torrent-api-py.vercel.net/api/v1/1337x/' + encodeURIComponent(query);
         const resAlt = await smartFetch(urlAlt, true, false);
         if (Array.isArray(resAlt.data)) {
@@ -447,7 +440,6 @@ async function search1337x(query) {
 
 async function searchTorrentGalaxy(query) {
     try {
-        setProgress('جاري تجميع روابط TorrentGalaxy...', 85);
         const url = 'https://torrent-api-py.vercel.net/api/v1/tgx/' + encodeURIComponent(query);
         const result = await smartFetch(url, true, false);
         if (Array.isArray(result.data)) {
@@ -466,7 +458,6 @@ async function searchTorrentGalaxy(query) {
 
 async function searchLimeTorrents(query) {
     try {
-        setProgress('المحطة الأخيرة: LimeTorrents...', 95);
         const url = 'https://torrent-api-py.vercel.net/api/v1/limetorrents/' + encodeURIComponent(query);
         const result = await smartFetch(url, true, false);
         if (Array.isArray(result.data)) {
@@ -483,6 +474,7 @@ async function searchLimeTorrents(query) {
     } catch (e) { return []; }
 }
 
+// التعديل الرئيسي هنا: معالجة المواقع تتابعيّاً لتحديث حقيقي ومضمون للبار
 async function searchTorrents() {
     const query = document.getElementById('searchInput').value.trim();
     if (!query) return;
@@ -500,30 +492,32 @@ async function searchTorrents() {
     icon.className = 'fas fa-spinner fa-spin';
     txt.textContent = '...';
 
-    // تصفير شريط التقدم عند البداية مباشرة
-    setProgress('بدء الاتصال بالمحركات...', 0);
+    setProgress('بدء الاتصال بمحركات البحث...', 5);
+
+    // تعريف قائمة بالمحركات ومسمياتها البرمجية
+    const engines = [
+        { name: 'YTS', func: searchYTS, pct: 15 },
+        { name: 'The Pirate Bay', func: searchTPB, pct: 30 },
+        { name: 'EZTV', func: searchEZTV, pct: 45 },
+        { name: 'Nyaa Anime', func: searchNyaa, pct: 60 },
+        { name: '1337x', func: search1337x, pct: 75 },
+        { name: 'TorrentGalaxy', func: searchTorrentGalaxy, pct: 90 },
+        { name: 'LimeTorrents', func: searchLimeTorrents, pct: 100 }
+    ];
 
     try {
-        const results = await Promise.allSettled([
-            searchYTS(query),
-            searchTPB(query),
-            searchEZTV(query),
-            searchNyaa(query),
-            search1337x(query),
-            searchTorrentGalaxy(query),
-            searchLimeTorrents(query)
-        ]);
-
-        const yts = results[0].status === 'fulfilled' ? results[0].value : [];
-        const tpb = results[1].status === 'fulfilled' ? results[1].value : [];
-        const eztv = results[2].status === 'fulfilled' ? results[2].value : [];
-        const nyaa = results[3].status === 'fulfilled' ? results[3].value : [];
-        const s1337x = results[4].status === 'fulfilled' ? results[4].value : [];
-        const tgx = results[5].status === 'fulfilled' ? results[5].value : [];
-        const lime = results[6].status === 'fulfilled' ? results[6].value : [];
-
-        allResults = [...yts, ...tpb, ...eztv, ...nyaa, ...s1337x, ...tgx, ...lime];
-        setProgress('جاري الترتيب والفلترة النهائية...', 100);
+        // تنفيذ التابع الخطي Sequential لضمان حركة الـ Progress Bar بالترتيب
+        for (const engine of engines) {
+            setProgress(`جاري فحص موقع ${engine.name}...`, engine.pct);
+            try {
+                const res = await engine.func(query);
+                if (Array.isArray(res)) {
+                    allResults = [...allResults, ...res];
+                }
+            } catch(err) {
+                console.error(`Error in ${engine.name}:`, err);
+            }
+        }
 
         if (allResults.length === 0) {
             setStatus('<i class="fas fa-exclamation-circle ml-2"></i> تعذر العثور على أي نتائج، يرجى التحقق من صياغة الاسم أو جرب مجدداً لاحقاً.', 'error');
@@ -546,8 +540,7 @@ async function searchTorrents() {
         setStatus('<i class="fas fa-exclamation-triangle ml-2"></i> خطأ غير متوقع أثناء معالجة البيانات.', 'error');
     } finally {
         document.getElementById('loading').classList.add('hidden');
-        // تأخير بسيط قبل إخفاء شريط التقدم ليرى المستخدم وصوله لـ 100% بنجاح
-        setTimeout(hideProgress, 600);
+        setTimeout(hideProgress, 800); // إبقاء الـ 100% مستقرة لملمح بصري مريح
         btn.disabled = false;
         icon.className = 'fas fa-search';
         txt.textContent = 'بحث';
