@@ -148,7 +148,6 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 let allResults = [];
 let currentFilter = 'all';
 
-// دالة جديدة لتنظيف النص من الرموز التي تعيق محركات البحث
 function sanitizeQuery(q) {
     return q.replace(/[:;'".,\-_\[\]()!؟?]/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -177,6 +176,7 @@ function formatBytes(bytes) {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 }
 
+// نظام جلب محدث مع بروكسيات أقوى ومعالجة لـ AllOrigins json
 async function smartFetch(url, type = 'json', forceProxy = false) {
     const fetchWithTimeout = async (targetUrl) => {
         const controller = new AbortController();
@@ -184,12 +184,13 @@ async function smartFetch(url, type = 'json', forceProxy = false) {
         const res = await fetch(targetUrl, { signal: controller.signal, cache: 'no-store' });
         clearTimeout(timeoutId);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return type === 'json' ? await res.json() : await res.text();
+        return res;
     };
 
     if (!forceProxy) {
         try {
-            return await fetchWithTimeout(url);
+            const res = await fetchWithTimeout(url);
+            return type === 'json' ? await res.json() : await res.text();
         } catch (e) {
             forceProxy = true;
         }
@@ -197,17 +198,25 @@ async function smartFetch(url, type = 'json', forceProxy = false) {
 
     if (forceProxy) {
         const proxies = [
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-            `https://corsproxy.io/?${encodeURIComponent(url)}`
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+            `https://api.allorigins.win/get?url=${encodeURIComponent(url)}` // استخدام مسار /get الأكثر استقراراً
         ];
 
-        for (let proxy of proxies) {
+        for (let i = 0; i < proxies.length; i++) {
             try {
-                return await fetchWithTimeout(proxy);
-            } catch (e) {}
+                const res = await fetchWithTimeout(proxies[i]);
+                if (i === 1) { // معالجة خاصة لرد AllOrigins
+                    const jsonWrapper = await res.json();
+                    const content = jsonWrapper.contents;
+                    return type === 'json' ? JSON.parse(content) : content;
+                }
+                return type === 'json' ? await res.json() : await res.text();
+            } catch (e) {
+                // المحاولة مع البروكسي البديل
+            }
         }
+        throw new Error('فشل جميع محاولات الاتصال عبر البروكسي');
     }
-    throw new Error('فشل في جلب البيانات');
 }
 
 function showToast(msg) {
@@ -463,7 +472,6 @@ async function searchLimeTorrents(query) {
 
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
-    // تطبيق الفلترة الذكية قبل تمرير النص للمحركات
     const cleanQuery = sanitizeQuery(rawQuery);
     
     if (!cleanQuery) return;
@@ -483,14 +491,15 @@ async function searchTorrents() {
 
     setProgress('بدء الاتصال بخوادم البحث...', 0);
 
+    // إضافة تأخير زمني مبرمج (Delay) لتجنب حظر الخوادم المشتركة
     const engines = [
-        { name: 'YTS', func: searchYTS },
-        { name: 'TPB', func: searchTPB },
-        { name: 'EZTV', func: searchEZTV },
-        { name: 'Nyaa', func: searchNyaa },
-        { name: '1337x', func: search1337x },
-        { name: 'TGx', func: searchTorrentGalaxy },
-        { name: 'Lime', func: searchLimeTorrents }
+        { name: 'YTS', func: searchYTS, delay: 0 },
+        { name: 'TPB', func: searchTPB, delay: 0 },
+        { name: 'EZTV', func: searchEZTV, delay: 0 },
+        { name: 'Nyaa', func: searchNyaa, delay: 100 },
+        { name: '1337x', func: search1337x, delay: 0 },
+        { name: 'TGx', func: searchTorrentGalaxy, delay: 400 },
+        { name: 'Lime', func: searchLimeTorrents, delay: 800 }
     ];
 
     let completedRequests = 0;
@@ -498,8 +507,10 @@ async function searchTorrents() {
 
     try {
         const promises = engines.map(async (engine) => {
+            if (engine.delay > 0) {
+                await new Promise(resolve => setTimeout(resolve, engine.delay));
+            }
             try {
-                // تمرير النص المفلتر (cleanQuery) بدلاً من النص الخام
                 const res = await engine.func(cleanQuery);
                 return res || [];
             } catch (err) {
