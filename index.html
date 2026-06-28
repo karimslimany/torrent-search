@@ -45,7 +45,8 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 .success-box { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
 .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
 .progress-bar { height: 4px; background: rgba(99,102,241,0.2); border-radius: 2px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.3s; }
+/* إضافة تأثير transition لجعل حركة الـ width سلسة للغاية وانسيابية */
+.progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.4s ease-in-out; }
 </style>
 </head>
 <body class="text-gray-100 min-h-screen">
@@ -239,9 +240,11 @@ function setStatus(msg, type = 'info') {
     else if (type === 'success') el.classList.add('success-box', 'text-green-300');
     else el.classList.add('info-box', 'text-blue-300');
     el.innerHTML = msg;
+    el.classList.remove('hidden');
 }
 function hideStatus() { document.getElementById('statusMsg').classList.add('hidden'); }
 
+// تعديل الدالة لتقوم بإظهار الشريط وتحريك الـ fill بشكل فوري وسلس
 function setProgress(text, percent) {
     const area = document.getElementById('progressArea');
     area.classList.remove('hidden');
@@ -333,7 +336,7 @@ function renderResults() {
 
 async function searchYTS(query) {
     try {
-        setProgress('YTS...', 10);
+        setProgress('جاري فحص موقع YTS...', 15);
         const url = 'https://yts.mx/api/v2/list_movies.json?query_term=' + encodeURIComponent(query) + '&sort_by=seeds&order_by=desc&limit=50';
         const result = await smartFetch(url, true, true);
         const data = result.data;
@@ -355,7 +358,7 @@ async function searchYTS(query) {
 
 async function searchTPB(query) {
     try {
-        setProgress('The Pirate Bay...', 25);
+        setProgress('جاري سحب بيانات The Pirate Bay...', 30);
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
         const result = await smartFetch(url, true, false);
         const data = result.data;
@@ -375,7 +378,7 @@ async function searchTPB(query) {
 
 async function searchEZTV(query) {
     try {
-        setProgress('EZTV...', 40);
+        setProgress('جاري الاتصال بـ EZTV...', 45);
         const url = 'https://eztv.re/api/get-torrents?limit=50&search=' + encodeURIComponent(query);
         const result = await smartFetch(url, true, false);
         const data = result.data;
@@ -395,7 +398,7 @@ async function searchEZTV(query) {
 
 async function searchNyaa(query) {
     try {
-        setProgress('Nyaa Anime...', 55);
+        setProgress('البحث في قاعدة Nyaa Anime...', 60);
         const url = 'https://nyaa.si/?page=rss&term=' + encodeURIComponent(query) + '&c=0_0&f=0';
         const result = await smartFetch(url, false, false);
         const parser = new DOMParser();
@@ -425,10 +428,7 @@ async function searchNyaa(query) {
 
 async function search1337x(query) {
     try {
-        setProgress('1337x...', 70);
-        const url = 'https://1337x.to/api/v1/search?q=' + encodeURIComponent(query);
-        const result = await smartFetch('https://api.apilayer.com/torrent/search?query=' + encodeURIComponent(query) + '&source=1337x', true, false);
-        // في حال فشل الـ API المخصص، نلجأ للـ Scraper المفتوح المعتمد على البروكسي لقراءة الأبيوم المشابه لـ Torrent API البديل
+        setProgress('جلب التورنت من 1337x...', 75);
         const urlAlt = 'https://torrent-api-py.vercel.net/api/v1/1337x/' + encodeURIComponent(query);
         const resAlt = await smartFetch(urlAlt, true, false);
         if (Array.isArray(resAlt.data)) {
@@ -447,7 +447,7 @@ async function search1337x(query) {
 
 async function searchTorrentGalaxy(query) {
     try {
-        setProgress('TorrentGalaxy...', 80);
+        setProgress('جاري تجميع روابط TorrentGalaxy...', 85);
         const url = 'https://torrent-api-py.vercel.net/api/v1/tgx/' + encodeURIComponent(query);
         const result = await smartFetch(url, true, false);
         if (Array.isArray(result.data)) {
@@ -466,7 +466,7 @@ async function searchTorrentGalaxy(query) {
 
 async function searchLimeTorrents(query) {
     try {
-        setProgress('LimeTorrents...', 90);
+        setProgress('المحطة الأخيرة: LimeTorrents...', 95);
         const url = 'https://torrent-api-py.vercel.net/api/v1/limetorrents/' + encodeURIComponent(query);
         const result = await smartFetch(url, true, false);
         if (Array.isArray(result.data)) {
@@ -500,6 +500,9 @@ async function searchTorrents() {
     icon.className = 'fas fa-spinner fa-spin';
     txt.textContent = '...';
 
+    // تصفير شريط التقدم عند البداية مباشرة
+    setProgress('بدء الاتصال بالمحركات...', 0);
+
     try {
         const results = await Promise.allSettled([
             searchYTS(query),
@@ -520,7 +523,7 @@ async function searchTorrents() {
         const lime = results[6].status === 'fulfilled' ? results[6].value : [];
 
         allResults = [...yts, ...tpb, ...eztv, ...nyaa, ...s1337x, ...tgx, ...lime];
-        setProgress('جاري الترتيب والفلترة...', 95);
+        setProgress('جاري الترتيب والفلترة النهائية...', 100);
 
         if (allResults.length === 0) {
             setStatus('<i class="fas fa-exclamation-circle ml-2"></i> تعذر العثور على أي نتائج، يرجى التحقق من صياغة الاسم أو جرب مجدداً لاحقاً.', 'error');
@@ -543,7 +546,8 @@ async function searchTorrents() {
         setStatus('<i class="fas fa-exclamation-triangle ml-2"></i> خطأ غير متوقع أثناء معالجة البيانات.', 'error');
     } finally {
         document.getElementById('loading').classList.add('hidden');
-        hideProgress();
+        // تأخير بسيط قبل إخفاء شريط التقدم ليرى المستخدم وصوله لـ 100% بنجاح
+        setTimeout(hideProgress, 600);
         btn.disabled = false;
         icon.className = 'fas fa-search';
         txt.textContent = 'بحث';
