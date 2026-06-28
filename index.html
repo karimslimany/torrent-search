@@ -80,7 +80,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 
         <div class="max-w-3xl mx-auto relative">
             <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="أدخل اسم الفيلم أو المسلسل باللغة الإنجليزية..." 
+                <input type="text" id="searchInput" placeholder="أدخل كلمات مفتاحية بسيطة (مثال: Avatar 2024)..." 
                     class="flex-1 bg-card border border-gray-700 rounded-xl px-6 py-4 text-lg outline-none text-white placeholder-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all">
                 <button onclick="searchTorrents()" id="searchBtn" class="magnet-btn px-8 py-4 rounded-xl font-bold text-white flex items-center gap-2 min-w-[100px] justify-center">
                     <i class="fas fa-search" id="searchIcon"></i>
@@ -148,6 +148,11 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 let allResults = [];
 let currentFilter = 'all';
 
+// دالة جديدة لتنظيف النص من الرموز التي تعيق محركات البحث
+function sanitizeQuery(q) {
+    return q.replace(/[:;'".,\-_\[\]()!؟?]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function detectCodec(name) {
     const lower = name.toLowerCase();
     if (lower.includes('av1')) return { codec: 'AV1', priority: 1, class: 'codec-badge-av1', icon: 'fa-crown' };
@@ -199,12 +204,9 @@ async function smartFetch(url, type = 'json', forceProxy = false) {
         for (let proxy of proxies) {
             try {
                 return await fetchWithTimeout(proxy);
-            } catch (e) {
-                // الانتقال للبروكسي التالي
-            }
+            } catch (e) {}
         }
     }
-    
     throw new Error('فشل في جلب البيانات');
 }
 
@@ -460,8 +462,11 @@ async function searchLimeTorrents(query) {
 }
 
 async function searchTorrents() {
-    const query = document.getElementById('searchInput').value.trim();
-    if (!query) return;
+    const rawQuery = document.getElementById('searchInput').value;
+    // تطبيق الفلترة الذكية قبل تمرير النص للمحركات
+    const cleanQuery = sanitizeQuery(rawQuery);
+    
+    if (!cleanQuery) return;
 
     document.getElementById('loading').classList.remove('hidden');
     document.getElementById('statsBar').classList.add('hidden');
@@ -494,7 +499,8 @@ async function searchTorrents() {
     try {
         const promises = engines.map(async (engine) => {
             try {
-                const res = await engine.func(query);
+                // تمرير النص المفلتر (cleanQuery) بدلاً من النص الخام
+                const res = await engine.func(cleanQuery);
                 return res || [];
             } catch (err) {
                 return [];
@@ -509,7 +515,7 @@ async function searchTorrents() {
         allResults = resultsArray.flat();
 
         if (allResults.length === 0) {
-            setStatus('<i class="fas fa-exclamation-circle ml-2"></i> لم يتم العثور على أي نتائج. <b>تلميح:</b> عند البحث عن المسلسلات أو الأنمي، جرب كتابة Season 1 بدلاً من S01.', 'error');
+            setStatus('<i class="fas fa-exclamation-circle ml-2"></i> لم يتم العثور على أي نتائج. <b>تلميح:</b> لنتائج أفضل، اكتب اسم العمل وسنة الإصدار (مثال: Batman 2022).', 'error');
         } else {
             hideStatus();
         }
