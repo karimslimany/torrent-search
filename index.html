@@ -34,7 +34,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 .codec-badge-x264 { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .codec-badge-other { background: linear-gradient(135deg, #6b7280, #4b5563); }
 .loader { border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top: 3px solid #6366f1; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-@keyframes spin { 0+ { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .magnet-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); transition: all 0.2s; }
 .magnet-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
 .quality-4k { color: #f87171; }
@@ -45,7 +45,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 .success-box { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
 .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
 .progress-bar { height: 6px; background: rgba(99,102,241,0.15); border-radius: 4px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.3s ease-out; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.2s ease-out; }
 </style>
 </head>
 <body class="text-gray-100 min-h-screen">
@@ -99,7 +99,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 
     <div id="progressArea" class="hidden max-w-3xl mx-auto mb-4">
         <div class="flex justify-between text-xs text-gray-400 mb-1">
-            <span id="progressText">جاري البحث...</span>
+            <span id="progressText">جاري البحث المتوازي السريع...</span>
             <span id="progressPercent">0%</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width: 0%"></div></div>
@@ -127,7 +127,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 
     <div id="loading" class="hidden flex flex-col items-center justify-center py-20">
         <div class="loader mb-4"></div>
-        <p class="text-gray-400" id="loadingText">جاري البحث...</p>
+        <p class="text-gray-400" id="loadingText">جاري البحث المتزامن...</p>
     </div>
 
     <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -474,7 +474,7 @@ async function searchLimeTorrents(query) {
     } catch (e) { return []; }
 }
 
-// التعديل الرئيسي هنا: معالجة المواقع تتابعيّاً لتحديث حقيقي ومضمون للبار
+// تعديل دالة البحث لتعمل بالتوازي مع احتساب تفاعلي للـ Progress Bar
 async function searchTorrents() {
     const query = document.getElementById('searchInput').value.trim();
     if (!query) return;
@@ -492,32 +492,40 @@ async function searchTorrents() {
     icon.className = 'fas fa-spinner fa-spin';
     txt.textContent = '...';
 
-    setProgress('بدء الاتصال بمحركات البحث...', 5);
+    setProgress('بدء فحص جميع المحركات بالتوازي...', 0);
 
-    // تعريف قائمة بالمحركات ومسمياتها البرمجية
     const engines = [
-        { name: 'YTS', func: searchYTS, pct: 15 },
-        { name: 'The Pirate Bay', func: searchTPB, pct: 30 },
-        { name: 'EZTV', func: searchEZTV, pct: 45 },
-        { name: 'Nyaa Anime', func: searchNyaa, pct: 60 },
-        { name: '1337x', func: search1337x, pct: 75 },
-        { name: 'TorrentGalaxy', func: searchTorrentGalaxy, pct: 90 },
-        { name: 'LimeTorrents', func: searchLimeTorrents, pct: 100 }
+        { name: 'YTS', func: searchYTS },
+        { name: 'The Pirate Bay', func: searchTPB },
+        { name: 'EZTV', func: searchEZTV },
+        { name: 'Nyaa Anime', func: searchNyaa },
+        { name: '1337x', func: search1337x },
+        { name: 'TorrentGalaxy', func: searchTorrentGalaxy },
+        { name: 'LimeTorrents', func: searchLimeTorrents }
     ];
 
-    try {
-        // تنفيذ التابع الخطي Sequential لضمان حركة الـ Progress Bar بالترتيب
-        for (const engine of engines) {
-            setProgress(`جاري فحص موقع ${engine.name}...`, engine.pct);
-            try {
-                const res = await engine.func(query);
-                if (Array.isArray(res)) {
-                    allResults = [...allResults, ...res];
-                }
-            } catch(err) {
-                console.error(`Error in ${engine.name}:`, err);
+    let completedRequests = 0;
+    const totalRequests = engines.length;
+
+    // دالة مغلفة لتنفيذ الطلب وتحديث الشريط فور انتهائه مستقلّاً
+    const wrappedSearch = async (engine) => {
+        try {
+            const res = await engine.func(query);
+            if (Array.isArray(res)) {
+                allResults = [...allResults, ...res];
             }
+        } catch (err) {
+            console.error(`Error in ${engine.name}:`, err);
+        } finally {
+            completedRequests++;
+            const currentPercent = Math.round((completedRequests / totalRequests) * 100);
+            setProgress(`تم الانتهاء من فحص ${completedRequests} من أصل ${totalRequests} محرك بحث...`, currentPercent);
         }
+    };
+
+    try {
+        // إطلاق كل الطلبات معاً في نفس اللحظة (Parallel فوري)
+        await Promise.all(engines.map(engine => wrappedSearch(engine)));
 
         if (allResults.length === 0) {
             setStatus('<i class="fas fa-exclamation-circle ml-2"></i> تعذر العثور على أي نتائج، يرجى التحقق من صياغة الاسم أو جرب مجدداً لاحقاً.', 'error');
@@ -540,7 +548,7 @@ async function searchTorrents() {
         setStatus('<i class="fas fa-exclamation-triangle ml-2"></i> خطأ غير متوقع أثناء معالجة البيانات.', 'error');
     } finally {
         document.getElementById('loading').classList.add('hidden');
-        setTimeout(hideProgress, 800); // إبقاء الـ 100% مستقرة لملمح بصري مريح
+        setTimeout(hideProgress, 800); 
         btn.disabled = false;
         icon.className = 'fas fa-search';
         txt.textContent = 'بحث';
