@@ -46,6 +46,8 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
 .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
 .progress-bar { height: 6px; background: rgba(99,102,241,0.15); border-radius: 4px; overflow: hidden; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.3s ease-out; }
+.pulse-dot { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 </style>
 </head>
 <body class="text-gray-100 min-h-screen">
@@ -62,13 +64,13 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
             </div>
         </div>
         <div class="hidden lg:flex items-center gap-3 text-xs text-gray-400">
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> YTS</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> TPB</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> EZTV</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Nyaa</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> 1337x</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> TGx</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Lime</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span> YTS</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span> TPB</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span> EZTV</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span> Nyaa</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span> 1337x</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span> TGx</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span> Lime</span>
         </div>
     </div>
 </header>
@@ -137,6 +139,10 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
             <p class="text-sm mt-2">YTS + TPB + EZTV + Nyaa + 1337x + TorrentGalaxy + LimeTorrents</p>
         </div>
     </div>
+    
+    <div class="mt-12 text-center text-xs text-gray-600 max-w-2xl mx-auto">
+        <p><i class="fas fa-exclamation-triangle ml-1"></i> إخلاء مسؤولية: هذه الأداة للبحث التعليمي فقط. المستخدم مسؤول عن التحقق من حقوق النشر والقوانين المحلية قبل التحميل.</p>
+    </div>
 </main>
 
 <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl shadow-2xl hidden items-center gap-2 z-50">
@@ -149,25 +155,19 @@ let allResults = [];
 let currentFilter = 'all';
 let currentAbortController = null;
 
-// ========== أدوات أمنية ==========
+// مصادر تتطلب بروكسي إجبارياً بسبب سياسات CORS الصارمة
+const PROXY_ONLY_DOMAINS = ['yts.mx', 'eztv.re', 'nyaa.si'];
 
+// ========== أدوات أمنية ==========
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = String(text ?? '');
     return div.innerHTML;
 }
 
-function escapeJsString(str) {
-    return String(str ?? '').replace(/[\\']/g, '\\$&').replace(/\n/g, '\\n');
-}
-
 // ========== تحليل ومعالجة البيانات ==========
-
 function sanitizeQuery(q) {
-    return q
-        .replace(/[^\w\s\u0600-\u06FF0-9\-']/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    return q.replace(/[^\w\s\u0600-\u06FF0-9\-']/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function detectCodec(name) {
@@ -195,17 +195,13 @@ function formatBytes(bytes) {
     return (num / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
 }
 
-// ========== الاتصال بالشبكة ==========
-
-async function smartFetch(url, type = 'json', forceProxy = false, signal = null) {
+// ========== الاتصال بالشبكة (مُحسّن) ==========
+async function smartFetch(url, type = 'json', signal = null) {
     const fetchWithTimeout = async (targetUrl) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
         try {
-            const res = await fetch(targetUrl, {
-                signal: signal || controller.signal,
-                cache: 'no-store'
-            });
+            const res = await fetch(targetUrl, { signal: signal || controller.signal, cache: 'no-store' });
             clearTimeout(timeoutId);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return type === 'json' ? await res.json() : await res.text();
@@ -215,193 +211,142 @@ async function smartFetch(url, type = 'json', forceProxy = false, signal = null)
         }
     };
 
-    if (!forceProxy) {
-        try {
-            return await fetchWithTimeout(url);
-        } catch (e) {
-            forceProxy = true;
-        }
-    }
-
-    if (forceProxy) {
+    const needsProxy = PROXY_ONLY_DOMAINS.some(domain => url.includes(domain));
+    
+    // إذا كان المصدر يتطلب بروكسي، نبدأ به مباشرة لتوفير الوقت
+    if (needsProxy) {
         const proxies = [
             `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
             `https://corsproxy.io/?${encodeURIComponent(url)}`
         ];
         for (const proxy of proxies) {
-            try {
-                return await fetchWithTimeout(proxy);
-            } catch (e) {
-                continue;
-            }
+            try { return await fetchWithTimeout(proxy); } catch (e) { continue; }
+        }
+        throw new Error('فشل البروكسي الإجباري');
+    }
+
+    // للمصادر الأخرى: محاولة مباشرة أولاً ثم بروكسي كاحتياط
+    try {
+        return await fetchWithTimeout(url);
+    } catch (e) {
+        const proxies = [`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`];
+        for (const proxy of proxies) {
+            try { return await fetchWithTimeout(proxy); } catch (err) { continue; }
         }
     }
     throw new Error('فشل في جلب البيانات من جميع المصادر');
 }
 
 // ========== مكتبات البحث ==========
-
 async function searchYTS(query, signal) {
     try {
         const url = 'https://yts.mx/api/v2/list_movies.json?query_term=' + encodeURIComponent(query) + '&sort_by=seeds&order_by=desc&limit=50';
-        const data = await smartFetch(url, 'json', false, signal);
-        if (data && data.data && data.data.movies) {
+        const data = await smartFetch(url, 'json', signal);
+        if (data?.data?.movies) {
             return data.data.movies.flatMap(movie =>
                 (movie.torrents || []).map(t => ({
                     name: `${movie.title} (${movie.year}) [${t.quality}] [${t.type}]`,
                     magnet: `magnet:?xt=urn:btih:${t.hash}&dn=${encodeURIComponent(movie.title)}&tr=udp://tracker.opentrackr.org:1337/announce`,
-                    size: parseInt(t.size_bytes) || 0,
-                    seeds: parseInt(t.seeds) || 0,
-                    peers: parseInt(t.peers) || 0,
-                    source: 'YTS'
+                    size: parseInt(t.size_bytes) || 0, seeds: parseInt(t.seeds) || 0, peers: parseInt(t.peers) || 0, source: 'YTS'
                 }))
             );
         }
         return [];
-    } catch (e) {
-        console.warn('YTS failed:', e.message);
-        return [];
-    }
+    } catch (e) { console.warn('YTS failed:', e.message); return []; }
 }
 
 async function searchTPB(query, signal) {
     try {
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
-        const data = await smartFetch(url, 'json', false, signal);
+        const data = await smartFetch(url, 'json', signal);
         if (Array.isArray(data)) {
             return data.filter(item => item.id !== '0' && item.name).map(item => ({
                 name: item.name,
                 magnet: `magnet:?xt=urn:btih:${item.info_hash}&dn=${encodeURIComponent(item.name)}&tr=udp://tracker.opentrackr.org:1337/announce`,
-                size: parseInt(item.size) || 0,
-                seeds: parseInt(item.seeders) || 0,
-                peers: parseInt(item.leechers) || 0,
-                source: 'TPB'
+                size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'TPB'
             }));
         }
         return [];
-    } catch (e) {
-        console.warn('TPB failed:', e.message);
-        return [];
-    }
+    } catch (e) { console.warn('TPB failed:', e.message); return []; }
 }
 
 async function searchEZTV(query, signal) {
     try {
         const url = 'https://eztv.re/api/get-torrents?limit=50&search=' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json', false, signal);
-        if (data && data.torrents && Array.isArray(data.torrents)) {
+        const data = await smartFetch(url, 'json', signal);
+        if (data?.torrents && Array.isArray(data.torrents)) {
             return data.torrents.map(t => ({
-                name: t.title || 'غير معروف',
-                magnet: t.magnet_url || '#',
-                size: parseInt(t.size_bytes) || 0,
-                seeds: parseInt(t.seeds) || 0,
-                peers: parseInt(t.peers) || 0,
-                source: 'EZTV'
+                name: t.title || 'غير معروف', magnet: t.magnet_url || '#',
+                size: parseInt(t.size_bytes) || 0, seeds: parseInt(t.seeds) || 0, peers: parseInt(t.peers) || 0, source: 'EZTV'
             }));
         }
         return [];
-    } catch (e) {
-        console.warn('EZTV failed:', e.message);
-        return [];
-    }
+    } catch (e) { console.warn('EZTV failed:', e.message); return []; }
 }
 
 async function searchNyaa(query, signal) {
     try {
         const url = 'https://nyaa.si/?page=rss&q=' + encodeURIComponent(query) + '&c=0_0&f=0';
-        const text = await smartFetch(url, 'text', true, signal);
+        const text = await smartFetch(url, 'text', signal);
         const parser = new DOMParser();
         const xml = parser.parseFromString(text, 'application/xml');
-        // التحقق من أخطاء التحليل
-        const parseError = xml.querySelector('parsererror');
-        if (parseError) throw new Error('فشل تحليل XML');
-        const items = xml.querySelectorAll('item');
-        return Array.from(items).map(item => {
+        if (xml.querySelector('parsererror')) throw new Error('XML Parse Error');
+        
+        return Array.from(xml.querySelectorAll('item')).map(item => {
             const title = item.querySelector('title')?.textContent || 'غير معروف';
             const link = item.querySelector('link')?.textContent || '#';
-            const desc = item.querySelector('description')?.textContent || '';
-            const nyaaInfo = item.querySelector('nyaa\\:size, size')?.textContent || '';
+            // استخراج الحجم بطريقة أكثر موثوقية تتجاوز مشاكل Namespace
             let sizeBytes = 0;
-            const sizeStr = nyaaInfo || desc;
-            const match = sizeStr.match(/([\d.]+)\s*(GiB|MiB|KiB|TiB|GB|MB|KB|TB|B)/i);
+            const desc = item.querySelector('description')?.textContent || '';
+            const fullText = item.textContent + ' ' + desc;
+            const match = fullText.match(/([\d.]+)\s*(GiB|MiB|KiB|TiB|GB|MB|KB|TB|B)/i);
             if (match) {
                 const val = parseFloat(match[1]);
                 const unit = match[2].toLowerCase();
-                if (unit.includes('t')) sizeBytes = val * 1024 * 1024 * 1024 * 1024;
-                else if (unit.includes('g')) sizeBytes = val * 1024 * 1024 * 1024;
-                else if (unit.includes('m')) sizeBytes = val * 1024 * 1024;
+                if (unit.includes('t')) sizeBytes = val * 1024**4;
+                else if (unit.includes('g')) sizeBytes = val * 1024**3;
+                else if (unit.includes('m')) sizeBytes = val * 1024**2;
                 else if (unit.includes('k')) sizeBytes = val * 1024;
                 else sizeBytes = val;
             }
-            return {
-                name: title,
-                magnet: link.startsWith('magnet') ? link : '#',
-                size: sizeBytes,
-                seeds: 0,
-                peers: 0,
-                source: 'Nyaa'
-            };
+            return { name: title, magnet: link.startsWith('magnet') ? link : '#', size: sizeBytes, seeds: 0, peers: 0, source: 'Nyaa' };
         });
-    } catch (e) {
-        console.warn('Nyaa failed:', e.message);
-        return [];
-    }
+    } catch (e) { console.warn('Nyaa failed:', e.message); return []; }
 }
 
-// دالة موحدة للـ APIs المتشابهة
 async function searchGenericAPI(apiName, endpoint, query, signal) {
     try {
         const url = `https://torrent-api-py.vercel.app/api/v1/${endpoint}/${encodeURIComponent(query)}`;
-        const data = await smartFetch(url, 'json', false, signal);
+        const data = await smartFetch(url, 'json', signal);
         if (Array.isArray(data)) {
             return data.map(item => ({
-                name: item.name || item.title || 'غير معروف',
-                magnet: item.magnet || '#',
-                size: parseInt(item.size_bytes) || 0,
-                seeds: parseInt(item.seeders) || 0,
-                peers: parseInt(item.leechers) || 0,
-                source: apiName
+                name: item.name || item.title || 'غير معروف', magnet: item.magnet || '#',
+                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: apiName
             }));
         }
         return [];
-    } catch (e) {
-        console.warn(`${apiName} failed:`, e.message);
-        return [];
-    }
+    } catch (e) { console.warn(`${apiName} failed:`, e.message); return []; }
 }
 
 // ========== UI Helpers ==========
-
 function showToast(msg) {
     const toast = document.getElementById('toast');
     document.getElementById('toastMsg').textContent = msg;
-    toast.classList.remove('hidden');
-    toast.classList.add('flex');
+    toast.classList.remove('hidden'); toast.classList.add('flex');
     setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 2500);
 }
 
 async function copyMagnet(link) {
-    if (!link || link === '#') {
-        showToast('لا يوجد رابط متاح للنسخ');
-        return;
-    }
+    if (!link || link === '#') { showToast('لا يوجد رابط متاح للنسخ'); return; }
     try {
         await navigator.clipboard.writeText(link);
         showToast('تم نسخ الرابط المغناطيسي بنجاح!');
     } catch (err) {
-        // طريقة احتياطية
         const ta = document.createElement('textarea');
-        ta.value = link;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-            document.execCommand('copy');
-            showToast('تم نسخ الرابط المغناطيسي بنجاح!');
-        } catch {
-            showToast('فشل النسخ - تأكد من أن الموقع يستخدم HTTPS');
-        }
+        ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showToast('تم نسخ الرابط المغناطيسي بنجاح!'); } 
+        catch { showToast('فشل النسخ - تأكد من أن الموقع يستخدم HTTPS'); }
         document.body.removeChild(ta);
     }
 }
@@ -412,8 +357,7 @@ function setStatus(msg, type = 'info') {
     if (type === 'error') el.classList.add('error-box', 'text-red-300');
     else if (type === 'success') el.classList.add('success-box', 'text-green-300');
     else el.classList.add('info-box', 'text-blue-300');
-    el.innerHTML = msg;
-    el.classList.remove('hidden');
+    el.innerHTML = msg; el.classList.remove('hidden');
 }
 function hideStatus() { document.getElementById('statusMsg').classList.add('hidden'); }
 
@@ -441,7 +385,6 @@ function setFilter(filter) {
 }
 
 // ========== عرض النتائج (مُؤمّن ضد XSS) ==========
-
 function getBarColor(codecName) {
     if (codecName === 'AV1') return 'bg-green-500';
     if (codecName === 'x265/HEVC') return 'bg-blue-500';
@@ -464,11 +407,13 @@ function renderResults() {
         });
     }
 
+    // منطق فرز محسّن: يجمع بين Codec و Quality لمنع تصدر نتائج منخفضة الجودة
     filtered.sort((a, b) => {
         if (sortType === 'codec') {
             const pa = detectCodec(a.name).priority;
             const pb = detectCodec(b.name).priority;
             if (pa !== pb) return pa - pb;
+            // إذا تساوى الـ Codec، نعطي الأولوية للدقة الأعلى
             return detectQuality(a.name).priority - detectQuality(b.name).priority;
         }
         if (sortType === 'quality') return detectQuality(a.name).priority - detectQuality(b.name).priority;
@@ -478,7 +423,11 @@ function renderResults() {
     });
 
     if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-500"><i class="fas fa-inbox text-6xl mb-4 opacity-20"></i><p class="text-xl">لم يتم العثور على نتائج تطابق هذا الفلتر</p></div>`;
+        let suggestion = '';
+        if (currentFilter !== 'all' && allResults.length > 0) {
+            suggestion = '<br><span class="text-sm opacity-80 cursor-pointer underline" onclick="setFilter(\'all\')">عرض جميع النتائج المتاحة بدلاً من ذلك</span>';
+        }
+        grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-500"><i class="fas fa-inbox text-6xl mb-4 opacity-20"></i><p class="text-xl">لم يتم العثور على نتائج تطابق هذا الفلتر${suggestion}</p></div>`;
         return;
     }
 
@@ -491,12 +440,11 @@ function renderResults() {
         const peers = Number(item.peers) || 0;
         const source = escapeHtml(item.source || 'Unknown');
         const magnet = item.magnet || '#';
-        const name = item.name || 'غير معروف';
-        const safeName = escapeHtml(name);
-        const safeMagnet = escapeJsString(magnet);
+        const safeName = escapeHtml(item.name || 'غير معروف');
 
         const card = document.createElement('div');
         card.className = 'torrent-card bg-card rounded-xl p-5 relative overflow-hidden group';
+        // إزالة data-magnet من HTML لتعزيز الأمان والاعتماد كلياً على addEventListener
         card.innerHTML = `
             <div class="absolute top-0 right-0 w-1 h-full ${getBarColor(codec.codec)}"></div>
             <div class="flex items-start justify-between mb-3">
@@ -509,11 +457,11 @@ function renderResults() {
             <h3 class="font-bold text-lg mb-2 line-clamp-2 leading-relaxed break-words" title="${safeName}">${safeName}</h3>
             <div class="flex flex-wrap gap-3 text-sm text-gray-400 mb-4">
                 <span class="flex items-center gap-1"><i class="fas fa-hdd text-gray-500"></i> ${size}</span>
-                <span class="flex items-center gap-1 text-green-400" title="عدد المزودين (Seeders)"><i class="fas fa-arrow-up"></i> ${seeds}</span>
-                <span class="flex items-center gap-1 text-red-400" title="عدد المحملين (Leechers)"><i class="fas fa-arrow-down"></i> ${peers}</span>
+                <span class="flex items-center gap-1 text-green-400" title="عدد المزودين"><i class="fas fa-arrow-up"></i> ${seeds}</span>
+                <span class="flex items-center gap-1 text-red-400" title="عدد المحملين"><i class="fas fa-arrow-down"></i> ${peers}</span>
             </div>
             <div class="flex gap-2">
-                <button data-magnet="${safeMagnet}" class="flex-1 magnet-btn py-2.5 rounded-lg text-white text-sm font-bold flex items-center justify-center gap-2" aria-label="نسخ رابط المغناطيسي">
+                <button class="copy-btn flex-1 magnet-btn py-2.5 rounded-lg text-white text-sm font-bold flex items-center justify-center gap-2" aria-label="نسخ رابط المغناطيسي">
                     <i class="fas fa-magnet"></i> نسخ الرابط
                 </button>
                 <a href="${escapeHtml(magnet)}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center" title="فتح باستخدام تطبيق التورنت" aria-label="فتح في تطبيق التورنت">
@@ -522,10 +470,7 @@ function renderResults() {
             </div>
         `;
 
-        // ربط الحدث بشكل آمن بدون inline JS
-        const copyBtn = card.querySelector('[data-magnet]');
-        copyBtn.addEventListener('click', () => copyMagnet(magnet));
-
+        card.querySelector('.copy-btn').addEventListener('click', () => copyMagnet(magnet));
         fragment.appendChild(card);
     });
 
@@ -534,7 +479,6 @@ function renderResults() {
 }
 
 // ========== البحث الرئيسي ==========
-
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
     const cleanQuery = sanitizeQuery(rawQuery);
@@ -544,10 +488,7 @@ async function searchTorrents() {
         return;
     }
 
-    // إلغاء أي بحث سابق
-    if (currentAbortController) {
-        currentAbortController.abort();
-    }
+    if (currentAbortController) currentAbortController.abort();
     currentAbortController = new AbortController();
     const signal = currentAbortController.signal;
 
@@ -590,9 +531,10 @@ async function searchTorrents() {
                 return [];
             } finally {
                 completedRequests++;
-                if (signal.aborted) return;
-                const currentPercent = Math.round((completedRequests / totalRequests) * 100);
-                setProgress(`اكتمل فحص ${completedRequests} من أصل ${totalRequests} مصادر...`, currentPercent);
+                if (!signal.aborted) {
+                    const currentPercent = Math.round((completedRequests / totalRequests) * 100);
+                    setProgress(`اكتمل فحص ${completedRequests} من أصل ${totalRequests} مصادر...`, currentPercent);
+                }
             }
         });
 
