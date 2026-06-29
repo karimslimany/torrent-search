@@ -210,9 +210,18 @@ function escapeHtml(text) {
 }
 
 // دالة النافذة المنبثقة الذكية للترجمة عبر OpenSubtitles
-function openSubtitlePopup(query) {
-    // تجهيز رابط OpenSubtitles المخصص للغة العربية
-    const openSubtitlesUrl = `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query)}`;
+// تقبل imdbId (إذا وُجد) أو query كاحتياطي
+function openSubtitlePopup(imdbId, query) {
+    let openSubtitlesUrl;
+    
+    if (imdbId) {
+        // استخدام IMDb ID بعد حذف tt من البداية
+        const numericId = imdbId.replace(/^tt/, '');
+        openSubtitlesUrl = `https://www.opensubtitles.org/ar/search/sublanguageid-ara/imdbid-${numericId}`;
+    } else {
+        // الطريقة القديمة بالاسم كاحتياطي إذا لم يتم العثور على IMDb
+        openSubtitlesUrl = `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query)}`;
+    }
     
     // إعدادات النافذة المنبثقة (أو التبويب الجديد على الهاتف)
     const width = 900;
@@ -226,6 +235,75 @@ function openSubtitlePopup(query) {
         `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
     );
     showToast('تم فتح نافذة OpenSubtitles للترجمة!');
+}
+
+// Cache داخلي لتخزين نتائج OMDb حتى لا يتم إرسال طلبات مكررة لنفس الفيلم
+const imdbCache = {};
+
+// دالة للحصول على IMDb ID من OMDb API باستخدام اسم العمل والسنة (اختياري)
+async function getIMDbID(title, year) {
+    // إنشاء مفتاح فريد للكاش
+    const cacheKey = title.toLowerCase().trim() + (year ? '_' + year : '');
+    
+    // إذا كانت النتيجة موجودة بالفعل في الكاش، أعدها مباشرة
+    if (imdbCache[cacheKey] !== undefined) {
+        return imdbCache[cacheKey];
+    }
+    
+    try {
+        // بناء رابط OMDb API
+        let omdbUrl = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}&type=movie`;
+        if (year) omdbUrl += `&y=${year}`;
+        
+        const data = await smartFetch(omdbUrl, 'json');
+        
+        if (data && data.Response === 'True' && data.imdbID) {
+            // تخزين النتيجة في الكاش وإعادتها
+            imdbCache[cacheKey] = data.imdbID;
+            return data.imdbID;
+        }
+        
+        // إذا لم يجد بصيغة movie، جرب بدون تحديد النوع (قد يكون مسلسل)
+        let omdbUrlSeries = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}`;
+        if (year) omdbUrlSeries += `&y=${year}`;
+        
+        const dataSeries = await smartFetch(omdbUrlSeries, 'json');
+        if (dataSeries && dataSeries.Response === 'True' && dataSeries.imdbID) {
+            imdbCache[cacheKey] = dataSeries.imdbID;
+            return dataSeries.imdbID;
+        }
+    } catch (e) {}
+    
+    // تخزين null في الكاش حتى لا نكرر الطلب للعنوان نفسه
+    imdbCache[cacheKey] = null;
+    return null;
+}
+
+// دالة لاستخراج اسم العمل والسنة من عنوان التورنت
+function extractTitleAndYear(torrentName) {
+    // إزالة الامتدادات الشائعة والعلامات غير المرغوب فيها
+    let name = torrentName
+        .replace(/\.(mkv|mp4|avi|ts|m2ts|mov|wmv|flv|webm)$/i, '')
+        .replace(/[\._]/g, ' ')
+        .trim();
+    
+    // البحث عن السنة (4 أرقام تبدأ بـ 19 أو 20)
+    const yearMatch = name.match(/\b(19\d{2}|20\d{2})\b/);
+    const year = yearMatch ? yearMatch[1] : null;
+    
+    // استخراج اسم العمل: كل ما قبل السنة أو قبل أول وسم جودة
+    let title = name;
+    if (yearMatch) {
+        title = name.substring(0, yearMatch.index).trim();
+    } else {
+        // قطع عند أول وسم جودة/كودك شائع
+        const cutMatch = name.match(/\b(1080p|720p|2160p|4k|uhd|bluray|bdrip|webrip|web-dl|hdtv|dvdrip|x264|x265|hevc|avc|av1|h264|h265|hdr|sdr|remux)\b/i);
+        if (cutMatch) {
+            title = name.substring(0, cutMatch.index).trim();
+        }
+    }
+    
+    return { title: title.trim(), year };
 }
 
 // أداة جلب البيانات بـ 3 مسارات لتجنب الحظر
@@ -398,7 +476,7 @@ function renderResults() {
                 <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
                     <i class="fas fa-link"></i> نسخ
                 </button>
-                <button onclick="openSubtitlePopup('${escapeHtml(currentSearchQuery)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
+                <button onclick="openSubtitlePopup('${escapeHtml(item.imdb || "")}', '${escapeHtml(currentSearchQuery)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
                     <i class="far fa-closed-captioning"></i> ترجمة
                 </button>
                 <a href="${escapeHtml(magnet)}" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white w-12 rounded-xl transition-colors flex items-center justify-center shadow-sm" title="الفتح بالتطبيق المباشر">
@@ -416,11 +494,18 @@ async function searchYTS(query) {
         const data = await smartFetch(url, 'json');
         if (data && data.data && data.data.movies) {
             return data.data.movies.flatMap(movie => 
-                (movie.torrents || []).map(t => ({
-                    name: movie.title + ' (' + movie.year + ') [' + t.quality + '] [' + t.type + ']',
-                    magnet: 'magnet:?xt=urn:btih:' + t.hash + '&dn=' + encodeURIComponent(movie.title) + '&tr=udp://tracker.opentrackr.org:1337/announce',
-                    size: t.size_bytes, seeds: t.seeds || 0, peers: t.peers || 0, source: 'YTS'
-                }))
+                (movie.torrents || []).map(t => {
+                    const item = {
+                        name: movie.title + ' (' + movie.year + ') [' + t.quality + '] [' + t.type + ']',
+                        magnet: 'magnet:?xt=urn:btih:' + t.hash + '&dn=' + encodeURIComponent(movie.title) + '&tr=udp://tracker.opentrackr.org:1337/announce',
+                        size: t.size_bytes, seeds: t.seeds || 0, peers: t.peers || 0, source: 'YTS'
+                    };
+                    // لا تستخدم OMDb إذا كان movie.imdb_code موجوداً، احفظه مباشرة
+                    if (movie.imdb_code) {
+                        item.imdb = 'tt' + movie.imdb_code;
+                    }
+                    return item;
+                })
             );
         }
         return [];
@@ -432,11 +517,22 @@ async function searchTPB(query) {
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
         const data = await smartFetch(url, 'json');
         if (Array.isArray(data)) {
-            return data.filter(item => item.id !== '0' && item.name).map(item => ({
+            const items = data.filter(item => item.id !== '0' && item.name).map(item => ({
                 name: item.name,
                 magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
                 size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
             }));
+            // استخراج IMDb ID لكل عنصر عبر OMDb
+            await Promise.all(items.map(async (item) => {
+                try {
+                    const { title, year } = extractTitleAndYear(item.name);
+                    if (title) {
+                        const imdbId = await getIMDbID(title, year);
+                        if (imdbId) item.imdb = imdbId;
+                    }
+                } catch (e) {}
+            }));
+            return items;
         }
         return [];
     } catch (e) { return []; }
@@ -447,10 +543,21 @@ async function searchEZTV(query) {
         const url = 'https://eztv.re/api/get-torrents?limit=50&search=' + encodeURIComponent(query);
         const data = await smartFetch(url, 'json');
         if (data && data.torrents && Array.isArray(data.torrents)) {
-            return data.torrents.map(t => ({
+            const items = data.torrents.map(t => ({
                 name: t.title || 'Unknown', magnet: t.magnet_url || '#',
                 size: parseInt(t.size_bytes) || 0, seeds: parseInt(t.seeds) || 0, peers: parseInt(t.peers) || 0, source: 'EZTV'
             }));
+            // استخراج IMDb ID لكل عنصر عبر OMDb
+            await Promise.all(items.map(async (item) => {
+                try {
+                    const { title, year } = extractTitleAndYear(item.name);
+                    if (title) {
+                        const imdbId = await getIMDbID(title, year);
+                        if (imdbId) item.imdb = imdbId;
+                    }
+                } catch (e) {}
+            }));
+            return items;
         }
         return [];
     } catch (e) { return []; }
@@ -463,7 +570,7 @@ async function searchNyaa(query) {
         const parser = new DOMParser();
         const xml = parser.parseFromString(text, 'text/xml');
         const items = xml.querySelectorAll('item');
-        return Array.from(items).map(item => {
+        const results = Array.from(items).map(item => {
             const title = item.querySelector('title')?.textContent || 'Unknown';
             const link = item.querySelector('link')?.textContent || '#';
             const desc = item.querySelector('description')?.textContent || '';
@@ -478,6 +585,17 @@ async function searchNyaa(query) {
                 size: sizeBytes, seeds: 0, peers: 0, source: 'Nyaa Anime'
             };
         });
+        // استخراج IMDb ID لكل عنصر عبر OMDb
+        await Promise.all(results.map(async (item) => {
+            try {
+                const { title, year } = extractTitleAndYear(item.name);
+                if (title) {
+                    const imdbId = await getIMDbID(title, year);
+                    if (imdbId) item.imdb = imdbId;
+                }
+            } catch (e) {}
+        }));
+        return results;
     } catch (e) { return []; }
 }
 
@@ -486,10 +604,21 @@ async function search1337x(query) {
         const url = 'https://torrent-api-py.vercel.app/api/v1/1337x/' + encodeURIComponent(query);
         const data = await smartFetch(url, 'json');
         if (Array.isArray(data)) {
-            return data.map(item => ({
+            const items = data.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: '1337x'
             }));
+            // استخراج IMDb ID لكل عنصر عبر OMDb
+            await Promise.all(items.map(async (item) => {
+                try {
+                    const { title, year } = extractTitleAndYear(item.name);
+                    if (title) {
+                        const imdbId = await getIMDbID(title, year);
+                        if (imdbId) item.imdb = imdbId;
+                    }
+                } catch (e) {}
+            }));
+            return items;
         }
         return [];
     } catch (e) { return []; }
@@ -500,10 +629,21 @@ async function searchTorrentGalaxy(query) {
         const url = 'https://torrent-api-py.vercel.app/api/v1/tgx/' + encodeURIComponent(query);
         const data = await smartFetch(url, 'json');
         if (Array.isArray(data)) {
-            return data.map(item => ({
+            const items = data.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'TorrentGalaxy'
             }));
+            // استخراج IMDb ID لكل عنصر عبر OMDb
+            await Promise.all(items.map(async (item) => {
+                try {
+                    const { title, year } = extractTitleAndYear(item.name);
+                    if (title) {
+                        const imdbId = await getIMDbID(title, year);
+                        if (imdbId) item.imdb = imdbId;
+                    }
+                } catch (e) {}
+            }));
+            return items;
         }
         return [];
     } catch (e) { return []; }
@@ -514,10 +654,21 @@ async function searchLimeTorrents(query) {
         const url = 'https://torrent-api-py.vercel.app/api/v1/limetorrents/' + encodeURIComponent(query);
         const data = await smartFetch(url, 'json');
         if (Array.isArray(data)) {
-            return data.map(item => ({
+            const items = data.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'LimeTorrents'
             }));
+            // استخراج IMDb ID لكل عنصر عبر OMDb
+            await Promise.all(items.map(async (item) => {
+                try {
+                    const { title, year } = extractTitleAndYear(item.name);
+                    if (title) {
+                        const imdbId = await getIMDbID(title, year);
+                        if (imdbId) item.imdb = imdbId;
+                    }
+                } catch (e) {}
+            }));
+            return items;
         }
         return [];
     } catch (e) { return []; }
