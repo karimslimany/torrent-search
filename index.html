@@ -45,6 +45,27 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 .progress-fill { height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width 0.3s ease-out; }
 .badge-pulse { animation: pulse-soft 2s infinite; }
 @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+/* ===== نافذة الترجمة المدمجة ===== */
+#subtitleModal { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); }
+#subtitleModal.active { display:flex; }
+.sub-modal-box { background:#0f172a; border:1px solid rgba(99,102,241,0.3); border-radius:1.5rem; width:min(700px, 95vw); max-height:85vh; display:flex; flex-direction:column; box-shadow:0 30px 60px -10px rgba(0,0,0,0.8), 0 0 0 1px rgba(99,102,241,0.1); overflow:hidden; }
+.sub-modal-header { background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1)); border-bottom:1px solid rgba(255,255,255,0.06); padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-shrink:0; }
+.sub-modal-body { overflow-y:auto; flex:1; padding:1.25rem 1.5rem; }
+.sub-modal-body::-webkit-scrollbar { width:5px; }
+.sub-modal-body::-webkit-scrollbar-track { background:transparent; }
+.sub-modal-body::-webkit-scrollbar-thumb { background:rgba(99,102,241,0.4); border-radius:99px; }
+.sub-item { background:rgba(30,41,59,0.7); border:1px solid rgba(255,255,255,0.05); border-radius:1rem; padding:1rem 1.25rem; margin-bottom:0.75rem; display:flex; align-items:center; gap:1rem; transition:all 0.2s; }
+.sub-item:hover { border-color:rgba(99,102,241,0.4); background:rgba(30,41,59,1); transform:translateY(-2px); }
+.sub-item-info { flex:1; min-width:0; }
+.sub-item-name { font-size:0.85rem; color:#e2e8f0; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; direction:ltr; }
+.sub-item-meta { font-size:0.72rem; color:#64748b; margin-top:0.25rem; display:flex; gap:0.75rem; flex-wrap:wrap; }
+.sub-dl-btn { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:0.6rem; padding:0.5rem 1rem; font-size:0.8rem; font-weight:700; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:0.4rem; transition:all 0.2s; flex-shrink:0; }
+.sub-dl-btn:hover { transform:scale(1.04); box-shadow:0 6px 16px -4px rgba(99,102,241,0.5); }
+.sub-dl-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.sub-loader { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem 0; gap:1rem; }
+.sub-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.05); border-top-color:#818cf8; border-radius:50%; animation:spin 1s linear infinite; }
+.sub-empty { text-align:center; padding:3rem 1rem; color:#64748b; }
+.sub-rating-stars { color:#f59e0b; letter-spacing:1px; }
 </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -164,6 +185,32 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
     </div>
 </footer>
 
+<!-- ===== نافذة الترجمة المدمجة ===== -->
+<div id="subtitleModal" onclick="closeSubModal(event)">
+    <div class="sub-modal-box">
+        <div class="sub-modal-header">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+                    <i class="far fa-closed-captioning text-indigo-400"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-white text-base" id="subModalTitle">ترجمات عربية</h3>
+                    <p class="text-[11px] text-slate-500" id="subModalSubtitle">جاري البحث في OpenSubtitles...</p>
+                </div>
+            </div>
+            <button onclick="closeSubModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white transition-all flex items-center justify-center text-sm">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sub-modal-body" id="subModalBody">
+            <div class="sub-loader">
+                <div class="sub-spinner"></div>
+                <p class="text-slate-500 text-sm animate-pulse">جاري البحث عن الترجمة...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl shadow-emerald-500/20 hidden items-center gap-3 z-50 font-bold transition-all duration-300">
     <i class="fas fa-check-circle text-xl"></i>
     <span id="toastMsg">تم النسخ بنجاح!</span>
@@ -209,33 +256,207 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// دالة النافذة المنبثقة الذكية للترجمة عبر OpenSubtitles
-// تقبل imdbId (إذا وُجد) أو query كاحتياطي
-function openSubtitlePopup(imdbId, query) {
-    let openSubtitlesUrl;
-    
-    if (imdbId) {
-        // استخدام IMDb ID بعد حذف tt من البداية
-        const numericId = imdbId.replace(/^tt/, '');
-        openSubtitlesUrl = `https://www.opensubtitles.org/ar/search/sublanguageid-ara/imdbid-${numericId}`;
-    } else {
-        // الطريقة القديمة بالاسم كاحتياطي إذا لم يتم العثور على IMDb
-        openSubtitlesUrl = `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query)}`;
+// ===== نظام الترجمة المدمج عبر OpenSubtitles REST API =====
+const OSUB_API_KEY = 'ASWUGwmKGozuQJ82kJXjRVjhMgIeph1t';
+const OSUB_API_BASE = 'https://api.opensubtitles.com/api/v1';
+
+// Cache لنتائج بحث الترجمة حتى لا نكرر الطلبات
+const subtitleCache = {};
+
+// فتح نافذة الترجمة المدمجة والبحث عبر API
+async function openSubtitlePopup(imdbId, query) {
+    const modal = document.getElementById('subtitleModal');
+    const body = document.getElementById('subModalBody');
+    const titleEl = document.getElementById('subModalTitle');
+    const subtitleEl = document.getElementById('subModalSubtitle');
+
+    // تحديد عنوان النافذة
+    titleEl.textContent = query ? `ترجمات: ${query}` : 'ترجمات عربية';
+    subtitleEl.textContent = 'جاري البحث في OpenSubtitles...';
+
+    // عرض النافذة مع حالة التحميل
+    body.innerHTML = `<div class="sub-loader"><div class="sub-spinner"></div><p class="text-slate-500 text-sm animate-pulse">جاري البحث عن الترجمة...</p></div>`;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // إنشاء مفتاح الكاش
+    const cacheKey = (imdbId || '') + '|' + (query || '');
+
+    try {
+        let results = [];
+
+        if (subtitleCache[cacheKey] !== undefined) {
+            // استخدام الكاش مباشرة
+            results = subtitleCache[cacheKey];
+        } else {
+            // بناء رابط البحث في OpenSubtitles API
+            let searchUrl = `${OSUB_API_BASE}/subtitles?languages=ar&order_by=download_count&order_direction=desc`;
+            if (imdbId) {
+                // البحث بـ IMDb ID (الأدق)
+                const numericId = parseInt(imdbId.replace(/^tt/, ''), 10);
+                searchUrl += `&imdb_id=${numericId}`;
+            } else {
+                // البحث بالاسم كاحتياطي
+                searchUrl += `&query=${encodeURIComponent(query)}`;
+            }
+
+            const response = await fetch(searchUrl, {
+                headers: {
+                    'Api-Key': OSUB_API_KEY,
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'TorrentFinder v1.0'
+                }
+            });
+
+            if (!response.ok) throw new Error('فشل الاتصال بـ OpenSubtitles API');
+
+            const data = await response.json();
+            results = (data.data || []).slice(0, 20); // أخذ أفضل 20 نتيجة
+            subtitleCache[cacheKey] = results;
+        }
+
+        // تحديث عنوان النافذة بعدد النتائج
+        subtitleEl.textContent = results.length > 0
+            ? `وُجد ${results.length} ترجمة عربية`
+            : 'لم يتم العثور على ترجمة عربية';
+
+        if (results.length === 0) {
+            // لا توجد ترجمات - عرض رسالة مع رابط احتياطي
+            const fallbackUrl = imdbId
+                ? `https://www.opensubtitles.org/ar/search/sublanguageid-ara/imdbid-${imdbId.replace(/^tt/, '')}`
+                : `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query || '')}`;
+            body.innerHTML = `
+                <div class="sub-empty">
+                    <i class="far fa-frown text-4xl mb-4 text-slate-600"></i>
+                    <p class="text-slate-400 font-bold mb-2">لا توجد ترجمات عربية متاحة</p>
+                    <p class="text-slate-600 text-sm mb-4">جرب البحث يدوياً في OpenSubtitles</p>
+                    <a href="${fallbackUrl}" target="_blank" class="inline-flex items-center gap-2 btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-bold">
+                        <i class="fas fa-external-link-alt"></i> فتح OpenSubtitles
+                    </a>
+                </div>`;
+            return;
+        }
+
+        // رسم قائمة الترجمات
+        body.innerHTML = results.map((sub, idx) => {
+            const attr = sub.attributes || {};
+            const release = attr.release || attr.files?.[0]?.file_name || 'ترجمة عربية';
+            const dlCount = attr.download_count || 0;
+            const rating = attr.ratings ? parseFloat(attr.ratings).toFixed(1) : null;
+            const uploader = attr.uploader?.name || 'مجهول';
+            const fps = attr.fps ? attr.fps + ' fps' : '';
+            const fileId = attr.files?.[0]?.file_id;
+            const starsCount = rating ? Math.round(parseFloat(rating) / 2) : 0;
+            const stars = rating ? '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount) : '';
+
+            return `
+            <div class="sub-item">
+                <div class="sub-item-info">
+                    <div class="sub-item-name" title="${release}">${release}</div>
+                    <div class="sub-item-meta">
+                        <span><i class="fas fa-download text-indigo-400 ml-1"></i>${dlCount.toLocaleString()}</span>
+                        ${rating ? `<span class="sub-rating-stars" title="التقييم: ${rating}/10">${stars}</span>` : ''}
+                        <span><i class="fas fa-user text-slate-600 ml-1"></i>${uploader}</span>
+                        ${fps ? `<span><i class="fas fa-film text-slate-600 ml-1"></i>${fps}</span>` : ''}
+                    </div>
+                </div>
+                ${fileId
+                    ? `<button class="sub-dl-btn" onclick="downloadSubtitle(${fileId}, '${release.replace(/'/g,"\'")}', this)" title="تحميل الترجمة مباشرة">
+                        <i class="fas fa-download"></i> تحميل
+                       </button>`
+                    : `<span class="text-slate-600 text-xs">غير متاح</span>`
+                }
+            </div>`;
+        }).join('');
+
+    } catch (err) {
+        // عرض رسالة خطأ مع رابط احتياطي
+        const fallbackUrl = imdbId
+            ? `https://www.opensubtitles.org/ar/search/sublanguageid-ara/imdbid-${imdbId.replace(/^tt/, '')}`
+            : `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query || '')}`;
+        subtitleEl.textContent = 'حدث خطأ في الاتصال';
+        body.innerHTML = `
+            <div class="sub-empty">
+                <i class="fas fa-wifi text-4xl mb-4 text-red-500/50"></i>
+                <p class="text-slate-400 font-bold mb-2">تعذّر الاتصال بـ OpenSubtitles API</p>
+                <p class="text-slate-600 text-sm mb-4">${err.message}</p>
+                <a href="${fallbackUrl}" target="_blank" class="inline-flex items-center gap-2 btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-bold">
+                    <i class="fas fa-external-link-alt"></i> فتح الموقع مباشرة
+                </a>
+            </div>`;
     }
-    
-    // إعدادات النافذة المنبثقة (أو التبويب الجديد على الهاتف)
-    const width = 900;
-    const height = 650;
-    const left = (window.screen.width / 2) - (width / 2);
-    const top = (window.screen.height / 2) - (height / 2);
-    
-    window.open(
-        openSubtitlesUrl, 
-        '_blank', 
-        `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
-    );
-    showToast('تم فتح نافذة OpenSubtitles للترجمة!');
 }
+
+// تحميل الترجمة مباشرة عبر OpenSubtitles Download API
+async function downloadSubtitle(fileId, fileName, btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري...';
+
+    try {
+        // طلب رابط التحميل من API
+        const response = await fetch(`${OSUB_API_BASE}/download`, {
+            method: 'POST',
+            headers: {
+                'Api-Key': OSUB_API_KEY,
+                'Content-Type': 'application/json',
+                'User-Agent': 'TorrentFinder v1.0'
+            },
+            body: JSON.stringify({ file_id: fileId })
+        });
+
+        if (!response.ok) throw new Error('فشل الحصول على رابط التحميل');
+
+        const data = await response.json();
+
+        if (data.link) {
+            // تحميل الملف مباشرة
+            const a = document.createElement('a');
+            a.href = data.link;
+            a.download = fileName.endsWith('.srt') || fileName.endsWith('.ass') ? fileName : fileName + '.srt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // تحديث الزر للتأكيد
+            btnEl.innerHTML = '<i class="fas fa-check"></i> تم!';
+            btnEl.style.background = 'linear-gradient(135deg,#059669,#10b981)';
+            showToast('✅ تم تحميل الترجمة بنجاح!');
+
+            setTimeout(() => {
+                btnEl.disabled = false;
+                btnEl.innerHTML = '<i class="fas fa-download"></i> تحميل';
+                btnEl.style.background = '';
+            }, 3000);
+        } else {
+            throw new Error(data.message || 'لم يتم الحصول على رابط التحميل');
+        }
+    } catch (err) {
+        btnEl.disabled = false;
+        btnEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ';
+        btnEl.style.background = 'linear-gradient(135deg,#dc2626,#ef4444)';
+        showToast('❌ فشل التحميل: ' + err.message);
+        setTimeout(() => {
+            btnEl.innerHTML = '<i class="fas fa-download"></i> تحميل';
+            btnEl.style.background = '';
+        }, 3000);
+    }
+}
+
+// إغلاق نافذة الترجمة
+function closeSubModal(event) {
+    // إغلاق عند النقر على الخلفية أو زر الإغلاق
+    if (event && event.target !== document.getElementById('subtitleModal')) return;
+    document.getElementById('subtitleModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// إغلاق بمفتاح Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.getElementById('subtitleModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+});
 
 // Cache داخلي لتخزين نتائج OMDb حتى لا يتم إرسال طلبات مكررة لنفس الفيلم
 const imdbCache = {};
