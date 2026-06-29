@@ -1,98 +1,101 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TorrentFinder Pro | محرك البحث المتطور</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-    body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f1f5f9; }
-    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-    .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #6366f1; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TorrentFinder | محرك البحث المتطور</title>
+    <!-- الأيقونة -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3290/3290074.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #020617; color: white; font-family: 'Tajawal', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        .spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #6366f1; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="min-h-screen p-4">
+<body class="p-4">
+    <div class="max-w-4xl mx-auto pt-10">
+        <!-- أيقونة الموقع في الصفحة الرئيسية -->
+        <div class="text-center mb-8">
+            <img src="https://cdn-icons-png.flaticon.com/512/3290/3290074.png" alt="icon" class="w-16 h-16 mx-auto mb-2">
+            <h1 class="text-3xl font-bold">TorrentFinder</h1>
+        </div>
+        
+        <div class="flex gap-2 mb-6">
+            <input type="text" id="searchInput" placeholder="اكتب اسم الفيلم أو المسلسل بدقة..." class="flex-1 bg-slate-800 p-4 rounded-xl border border-slate-700 outline-none focus:border-indigo-500">
+            <button onclick="runSearch()" id="searchBtn" class="bg-indigo-600 px-8 rounded-xl font-bold hover:bg-indigo-500 transition">بحث</button>
+        </div>
 
-<main class="max-w-4xl mx-auto pt-10">
-    <h1 class="text-3xl font-bold text-center mb-8 gradient-text">TorrentFinder Pro</h1>
-    
-    <div class="flex gap-2 mb-6">
-        <input type="text" id="searchInput" placeholder="اكتب اسم الفيلم أو المسلسل..." 
-            class="flex-1 bg-slate-800 p-4 rounded-xl border border-slate-700 outline-none focus:border-indigo-500">
-        <button onclick="runSearch()" id="searchBtn" class="bg-indigo-600 px-8 rounded-xl font-bold hover:bg-indigo-500 transition">بحث</button>
+        <div id="status" class="text-center text-indigo-400 mb-4 hidden items-center justify-center gap-2">
+            <div class="spinner"></div> <span>جاري البحث في المصادر العالمية...</span>
+        </div>
+        <div id="results" class="grid grid-cols-1 gap-4"></div>
     </div>
 
-    <div id="status" class="text-center text-indigo-400 mb-6 hidden">
-        <div class="loader mx-auto mb-2"></div>
-        جاري الاتصال بالمصادر العالمية...
-    </div>
+    <script>
+        const engines = [
+            { name: 'YTS', url: 'https://yts.mx/api/v2/list_movies.json?query_term=' },
+            { name: '1337x', url: 'https://torrent-api-py.vercel.app/api/v1/1337x/' }
+        ];
 
-    <div id="results" class="grid grid-cols-1 gap-4"></div>
-</main>
+        async function runSearch() {
+            const q = document.getElementById('searchInput').value.trim();
+            if (!q) return;
 
-<script>
-    // نظام المصادر البديلة (Fallback System)
-    const engines = [
-        { name: '1337x', url: 'https://torrent-api-py.vercel.app/api/v1/1337x/' },
-        { name: 'TGx', url: 'https://torrent-api-py.vercel.app/api/v1/tgx/' },
-        { name: 'YTS', url: 'https://yts.mx/api/v2/list_movies.json?query_term=' }
-    ];
+            const resDiv = document.getElementById('results');
+            const statDiv = document.getElementById('status');
+            const btn = document.getElementById('searchBtn');
+            
+            resDiv.innerHTML = '';
+            statDiv.classList.remove('hidden');
+            btn.disabled = true;
 
-    async function runSearch() {
-        const q = document.getElementById('searchInput').value;
-        if (!q) return;
+            let allResults = [];
 
-        const resDiv = document.getElementById('results');
-        const statDiv = document.getElementById('status');
-        resDiv.innerHTML = '';
-        statDiv.classList.remove('hidden');
+            // البحث التوازي
+            const promises = engines.map(async (engine) => {
+                try {
+                    const response = await fetch(engine.url + encodeURIComponent(q));
+                    const data = await response.json();
+                    return engine.name === 'YTS' ? (data.data.movies || []) : data;
+                } catch (e) { return []; }
+            });
 
-        // تنظيف مدخلات البحث لزيادة دقة النتائج
-        const cleanQuery = q.replace(/[^\w\s]/g, ' ').trim();
+            const resultsArrays = await Promise.all(promises);
+            allResults = resultsArrays.flat();
+            
+            statDiv.classList.add('hidden');
+            btn.disabled = false;
 
-        // تنفيذ البحث في كل المصادر بالتوازي
-        const promises = engines.map(async (engine) => {
-            try {
-                let fetchUrl = engine.name === 'YTS' ? engine.url + encodeURIComponent(cleanQuery) : engine.url + encodeURIComponent(cleanQuery);
-                const response = await fetch(fetchUrl);
-                if (!response.ok) return [];
-                const data = await response.json();
-                
-                // استخراج النتائج حسب هيكلية الموقع
-                return engine.name === 'YTS' ? (data.data.movies || []) : data;
-            } catch (e) {
-                return [];
+            if (allResults.length === 0) {
+                resDiv.innerHTML = '<p class="text-center text-red-400">لم يتم العثور على نتائج. تأكد من كتابة الاسم بالإنجليزية.</p>';
+                return;
             }
-        });
 
-        const allResults = (await Promise.all(promises)).flat();
-        statDiv.classList.add('hidden');
+            // الفلترة الذكية: ترتيب النتائج حسب مدى قربها من كلمة البحث
+            const sortedResults = allResults.sort((a, b) => {
+                const titleA = (a.title || a.name).toLowerCase();
+                const qLower = q.toLowerCase();
+                return titleA.includes(qLower) ? -1 : 1;
+            });
 
-        if (allResults.length === 0) {
-            resDiv.innerHTML = '<p class="text-center text-red-400">لم يتم العثور على نتائج. تأكد من كتابة الاسم بالإنجليزية.</p>';
-            return;
+            sortedResults.slice(0, 15).forEach(item => {
+                const title = item.title || item.name;
+                const magnet = item.magnet || (item.torrents ? `magnet:?xt=urn:btih:${item.torrents[0].hash}` : '#');
+                
+                resDiv.innerHTML += `
+                    <div class="glass p-4 rounded-xl flex justify-between items-center border border-slate-700 hover:border-indigo-500 transition">
+                        <span class="truncate ml-4 text-sm">${title}</span>
+                        <button onclick="navigator.clipboard.writeText('${magnet}'); alert('تم النسخ!');" 
+                            class="bg-indigo-600 text-xs px-4 py-2 rounded-lg hover:bg-indigo-500">نسخ الرابط</button>
+                    </div>
+                `;
+            });
         }
 
-        // عرض النتائج
-        allResults.slice(0, 15).forEach(item => {
-            const title = item.title || item.name;
-            const magnet = item.magnet || (item.torrents ? `magnet:?xt=urn:btih:${item.torrents[0].hash}` : '#');
-            
-            resDiv.innerHTML += `
-                <div class="glass p-4 rounded-xl flex justify-between items-center border border-slate-700 hover:border-indigo-500 transition">
-                    <span class="truncate ml-4">${title}</span>
-                    <button onclick="navigator.clipboard.writeText('${magnet}')" 
-                        class="bg-indigo-600 text-xs px-4 py-2 rounded-lg hover:bg-indigo-500">نسخ الرابط</button>
-                </div>
-            `;
-        });
-    }
-
-    // السماح بالبحث بزر Enter
-    document.getElementById('searchInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') runSearch(); });
-</script>
+        document.getElementById('searchInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') runSearch(); });
+    </script>
 </body>
 </html>
