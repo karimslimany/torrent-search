@@ -209,6 +209,22 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// دالة النافذة المنبثقة الذكية للترجمة
+function openSubtitlePopup(query) {
+    const width = 900;
+    const height = 650;
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+    const url = `https://subdl.com/subtitle/search?q=${encodeURIComponent(query)}`;
+    
+    window.open(
+        url, 
+        'SubtitleWindow', 
+        `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
+    );
+    showToast('تم فتح نافذة الترجمة بنجاح!');
+}
+
 // أداة جلب البيانات
 async function smartFetch(url, type = 'json') {
     const proxies = [
@@ -349,9 +365,6 @@ function renderResults() {
         const source = item.source || 'Unknown';
         const magnet = item.magnet || '#';
         const safeName = escapeHtml(item.name);
-        
-        // رابط الترجمة المباشر مبني على اسم البحث لتجنب تعقيدات مسارات التورنت
-        const subtitleLink = `https://subdl.com/subtitle/search?q=${encodeURIComponent(currentSearchQuery)}`;
 
         return `
         <div class="torrent-card bg-card rounded-2xl p-5 relative overflow-hidden group flex flex-col h-full">
@@ -379,12 +392,12 @@ function renderResults() {
             
             <div class="flex gap-2 mt-auto pt-2">
                 <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
-                    <i class="fas fa-magnet"></i> نسخ
+                    <i class="fas fa-link"></i> نسخ
                 </button>
-                <a href="${subtitleLink}" target="_blank" rel="noopener noreferrer" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية">
+                <button onclick="openSubtitlePopup('${escapeHtml(currentSearchQuery)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة داخل الموقع">
                     <i class="far fa-closed-captioning"></i> ترجمة
-                </a>
-                <a href="${escapeHtml(magnet)}" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white w-12 rounded-xl transition-colors flex items-center justify-center shadow-sm" title="فتح بالتطبيق المباشر">
+                </button>
+                <a href="${escapeHtml(magnet)}" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white w-12 rounded-xl transition-colors flex items-center justify-center shadow-sm" title="الفتح بالتطبيق المباشر">
                     <i class="fas fa-external-link-alt"></i>
                 </a>
             </div>
