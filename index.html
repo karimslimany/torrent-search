@@ -84,7 +84,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                     <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                         <i class="fas fa-search text-slate-500"></i>
                     </div>
-                    <input type="text" id="searchInput" placeholder="ابحث بدقة (مثال: Inception 2010 أو The Boys Season 1)..." 
+                    <input type="text" id="searchInput" placeholder="ابحث بدقة (مثال: Inception أو Attack on Titan Season 1)..." 
                         class="search-input w-full bg-card border border-slate-700 rounded-2xl pr-11 pl-4 py-4 text-lg outline-none text-white placeholder-slate-500 transition-all focus:border-indigo-500">
                 </div>
                 <button onclick="searchTorrents()" id="searchBtn" class="btn-primary px-8 py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 min-w-[120px]">
@@ -209,27 +209,31 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// دالة النافذة المنبثقة الذكية للترجمة
+// دالة النافذة المنبثقة الذكية للترجمة عبر OpenSubtitles
 function openSubtitlePopup(query) {
+    // تجهيز رابط OpenSubtitles المخصص للغة العربية
+    const openSubtitlesUrl = `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query)}`;
+    
+    // إعدادات النافذة المنبثقة (أو التبويب الجديد على الهاتف)
     const width = 900;
     const height = 650;
     const left = (window.screen.width / 2) - (width / 2);
     const top = (window.screen.height / 2) - (height / 2);
-    const url = `https://subdl.com/subtitle/search?q=${encodeURIComponent(query)}`;
     
     window.open(
-        url, 
-        'SubtitleWindow', 
+        openSubtitlesUrl, 
+        '_blank', 
         `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
     );
-    showToast('تم فتح نافذة الترجمة بنجاح!');
+    showToast('تم فتح نافذة OpenSubtitles للترجمة!');
 }
 
-// أداة جلب البيانات
+// أداة جلب البيانات بـ 3 مسارات لتجنب الحظر
 async function smartFetch(url, type = 'json') {
     const proxies = [
         `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        `https://corsproxy.io/?${encodeURIComponent(url)}`
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
     ];
 
     try {
@@ -394,7 +398,7 @@ function renderResults() {
                 <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
                     <i class="fas fa-link"></i> نسخ
                 </button>
-                <button onclick="openSubtitlePopup('${escapeHtml(currentSearchQuery)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة داخل الموقع">
+                <button onclick="openSubtitlePopup('${escapeHtml(currentSearchQuery)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
                     <i class="far fa-closed-captioning"></i> ترجمة
                 </button>
                 <a href="${escapeHtml(magnet)}" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white w-12 rounded-xl transition-colors flex items-center justify-center shadow-sm" title="الفتح بالتطبيق المباشر">
@@ -582,7 +586,7 @@ async function searchTorrents() {
         setProgress('تم استكمال سحب البيانات، جاري فرز النتائج...', 100);
 
         if (allResults.length === 0) {
-            setStatus('<i class="fas fa-exclamation-triangle mr-2 text-lg"></i> عذراً، لم نتمكن من العثور على أي نتائج. <strong>تلميح:</strong> حاول استخدام كلمات باللغة الإنجليزية وتأكد من صحة الاسم (مثال: Batman 2022).', 'error');
+            setStatus('<i class="fas fa-exclamation-triangle mr-2 text-lg"></i> عذراً، لم نتمكن من العثور على أي نتائج. <strong>تلميح:</strong> للأنمي والمسلسلات جرب كتابة (Season 1) بدلاً من (S01).', 'error');
         } else {
             hideStatus();
         }
