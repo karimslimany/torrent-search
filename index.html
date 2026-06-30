@@ -410,13 +410,18 @@ async function downloadSubtitle(fileId, fileName, btnEl) {
         const data = await response.json();
 
         if (data.link) {
-            // تحميل الملف مباشرة
+            // جلب الملف كـ Blob ثم تحميله محلياً لتجاوز قيود cross-origin
+            const fileRes = await fetch(data.link);
+            if (!fileRes.ok) throw new Error('فشل جلب ملف الترجمة');
+            const blob = await fileRes.blob();
+            const blobUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = data.link;
+            a.href = blobUrl;
             a.download = fileName.endsWith('.srt') || fileName.endsWith('.ass') ? fileName : fileName + '.srt';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
 
             // تحديث الزر للتأكيد
             btnEl.innerHTML = '<i class="fas fa-check"></i> تم!';
@@ -744,14 +749,14 @@ function renderResults() {
             </div>
             
             <div class="flex gap-2 mt-auto pt-2">
-                <a href="${escapeHtml(magnet)}" class="btn-primary w-12 py-2.5 rounded-xl text-white transition-colors flex items-center justify-center shadow-sm flex-shrink-0" title="الفتح بالتطبيق المباشر">
-                    <i class="fas fa-external-link-alt"></i>
+                <a href="${escapeHtml(magnet)}" class="btn-primary flex-1 py-2.5 rounded-xl text-white transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="الفتح بالتطبيق المباشر">
+                    <i class="fas fa-external-link-alt"></i> فتح
                 </a>
                 <button onclick="openSubtitlePopup('${escapeHtml(item.imdb || "")}', '${escapeHtml(item.name)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
                     <i class="far fa-closed-captioning"></i> ترجمة
                 </button>
-                <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
-                    <i class="fas fa-link"></i> نسخ
+                <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="w-12 bg-slate-700 hover:bg-slate-600 border border-slate-600 py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center shadow-sm transition-all flex-shrink-0" title="نسخ رابط التحميل">
+                    <i class="fas fa-link"></i>
                 </button>
             </div>
         </div>`;
