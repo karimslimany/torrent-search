@@ -144,8 +144,8 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
         <div class="flex items-center gap-2 bg-slate-800 p-1.5 rounded-xl border border-slate-700 w-full md:w-auto">
             <i class="fas fa-sort-amount-down text-slate-400 mr-2 text-sm"></i>
             <select id="sortSelect" onchange="renderResults()" class="bg-transparent border-none text-sm outline-none text-white w-full md:w-auto cursor-pointer focus:ring-0">
-                <option value="relevance" class="bg-slate-800">الأكثر تطابقاً للبحث</option>
-                <option value="codec" class="bg-slate-800">جودة الترميز (Codec)</option>
+                <option value="relevance" class="bg-slate-800">الأكثر تطابقاً مع البحث</option>
+                <option value="codec" class="bg-slate-800">الأفضل جودة (AV1 ← x265 ← x264)</option>
                 <option value="quality" class="bg-slate-800">دقة العرض (Resolution)</option>
                 <option value="size" class="bg-slate-800">حجم الملف</option>
                 <option value="seeds" class="bg-slate-800">المزودون (Seeders)</option>
@@ -670,20 +670,30 @@ function renderResults() {
             const titleA = a.name.toLowerCase();
             const titleB = b.name.toLowerCase();
             const qWords = currentSearchQuery.toLowerCase().split(' ');
-            
             const aStarts = titleA.startsWith(qWords[0]) ? 1 : 0;
             const bStarts = titleB.startsWith(qWords[0]) ? 1 : 0;
             if (aStarts !== bStarts) return bStarts - aStarts;
-            
             return (b.seeds || 0) - (a.seeds || 0);
         }
         if (sortType === 'codec') {
+            // الترتيب: AV1 → x265/HEVC → x264/AVC → أخرى
             const pa = detectCodec(a.name).priority;
             const pb = detectCodec(b.name).priority;
             if (pa !== pb) return pa - pb;
-            return detectQuality(a.name).priority - detectQuality(b.name).priority;
+            // داخل نفس الـ codec: دقة أعلى أولاً (4K > 1080 > 720)
+            const qa = detectQuality(a.name).priority;
+            const qb = detectQuality(b.name).priority;
+            if (qa !== qb) return qa - qb;
+            // نفس الـ codec ونفس الدقة: seeds أعلى أولاً
+            return (b.seeds || 0) - (a.seeds || 0);
         }
-        if (sortType === 'quality') return detectQuality(a.name).priority - detectQuality(b.name).priority;
+        if (sortType === 'quality') {
+            const qa = detectQuality(a.name).priority;
+            const qb = detectQuality(b.name).priority;
+            if (qa !== qb) return qa - qb;
+            // نفس الدقة: codec أفضل أولاً
+            return detectCodec(a.name).priority - detectCodec(b.name).priority;
+        }
         if (sortType === 'size') return (b.size || 0) - (a.size || 0);
         if (sortType === 'seeds') return (b.seeds || 0) - (a.seeds || 0);
         return 0;
@@ -1002,7 +1012,7 @@ async function searchTorrents() {
         document.getElementById('x264Count').textContent = x264Count;
         document.getElementById('statsBar').classList.remove('hidden');
         
-        document.getElementById('sortSelect').value = 'relevance';
+        document.getElementById('sortSelect').value = 'codec';
 
         renderResults();
     } catch (error) {
