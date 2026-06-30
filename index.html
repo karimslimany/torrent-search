@@ -227,6 +227,43 @@ function sanitizeQuery(q) {
     return q.replace(/[:;'".,\-_\[\]()!؟?]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// ---------------------------------------------------------------
+// حساب درجة التطابق (Relevance Score) بين اسم النتيجة وكلمة البحث
+// تُستخدم لفلترة الضوضاء (نتائج غير ذات صلة) وللترتيب التدريجي
+// كلما زادت الدرجة كانت النتيجة أكثر دقة ومطابقة للبحث
+// ---------------------------------------------------------------
+function relevanceScore(resultName, query) {
+    if (!query) return 1; // لا يوجد بحث نشط = لا تصفية
+
+    const cleanName = resultName.toLowerCase().replace(/[\._\-\[\]()]/g, ' ').replace(/\s+/g, ' ').trim();
+    const cleanQuery = query.toLowerCase().trim();
+    const queryWords = cleanQuery.split(' ').filter(w => w.length > 0);
+
+    if (queryWords.length === 0) return 1;
+
+    // تطابق تام للعبارة كاملة = أعلى درجة ممكنة
+    if (cleanName.includes(cleanQuery)) return 100;
+
+    // عدد كلمات البحث الموجودة فعلياً داخل اسم النتيجة
+    let matchedWords = 0;
+    queryWords.forEach(word => {
+        // تجاهل الكلمات القصيرة جداً (أحرف ربط) من اشتراط التطابق الصارم
+        if (word.length <= 1) { matchedWords += 0.3; return; }
+        if (cleanName.includes(word)) matchedWords++;
+    });
+
+    const matchRatio = matchedWords / queryWords.length;
+
+    // النتيجة تبدأ بأول كلمة من البحث = إشارة قوية على الدقة
+    const startsWithFirst = cleanName.startsWith(queryWords[0]) ? 15 : 0;
+
+    return Math.round((matchRatio * 80) + startsWithFirst);
+}
+
+// الحد الأدنى لدرجة التطابق لقبول النتيجة (فلترة الضوضاء)
+// 40 تعني أن نصف كلمات البحث تقريباً يجب أن تكون موجودة على الأقل
+const MIN_RELEVANCE_THRESHOLD = 40;
+
 function detectCodec(name) {
     const lower = name.toLowerCase();
     if (lower.includes('av1')) return { codec: 'AV1', priority: 1, class: 'codec-badge-av1 text-white shadow-sm', icon: 'fa-crown' };
@@ -671,16 +708,21 @@ function renderResults() {
     }
 
     filtered.sort((a, b) => {
+        // درجة التطابق محسوبة مسبقاً عند الجلب (_relevance) — احتياط لو غابت
+        const relA = a._relevance ?? relevanceScore(a.name, currentSearchQuery);
+        const relB = b._relevance ?? relevanceScore(b.name, currentSearchQuery);
+
         if (sortType === 'relevance') {
-            const titleA = a.name.toLowerCase();
-            const titleB = b.name.toLowerCase();
-            const qWords = currentSearchQuery.toLowerCase().split(' ');
-            const aStarts = titleA.startsWith(qWords[0]) ? 1 : 0;
-            const bStarts = titleB.startsWith(qWords[0]) ? 1 : 0;
-            if (aStarts !== bStarts) return bStarts - aStarts;
+            // الأكثر دقة ومطابقة للبحث أولاً، ثم الأكثر seeds
+            if (relA !== relB) return relB - relA;
             return (b.seeds || 0) - (a.seeds || 0);
         }
         if (sortType === 'codec') {
+            // طبقة أولى: فصل التطابق التام (100) عن باقي النتائج ذات الصلة
+            // بحيث لا تطغى نتيجة AV1 ضعيفة الصلة على نتيجة مطابقة تماماً
+            const tierA = relA >= 90 ? 0 : 1;
+            const tierB = relB >= 90 ? 0 : 1;
+            if (tierA !== tierB) return tierA - tierB;
             // الترتيب: AV1 → x265/HEVC → x264/AVC → أخرى
             const pa = detectCodec(a.name).priority;
             const pb = detectCodec(b.name).priority;
@@ -979,46 +1021,58 @@ async function searchTorrents() {
 
     let completedRequests = 0;
     const totalRequests = engines.length;
+    document.getElementById('sortSelect').value = 'codec';
 
     try {
-        const promises = engines.map(async (engine) => {
+        // ------------------------------------------------------------
+        // البث التدريجي (Streaming): كل محرك يُعرض فور اكتماله بدل
+        // انتظار Promise.all للجميع — هذا يحل مشكلة "التقطع" الظاهري
+        // الناتج عن انتظار أبطأ محرك (مثل Uindex/TGx ذوي التأخير).
+        // ------------------------------------------------------------
+        const enginePromises = engines.map(async (engine) => {
             if (engine.delay > 0) {
                 await new Promise(resolve => setTimeout(resolve, engine.delay));
             }
             try {
                 const res = await engine.func(cleanQuery);
-                return res || [];
+
+                // ---- فلترة الضوضاء: استبعاد النتائج غير ذات الصلة ----
+                // حساب درجة تطابق كل نتيجة مع كلمة البحث، واستبعاد
+                // أي نتيجة تحت الحد الأدنى (نتائج "تخمينية" من محركات
+                // واسعة مثل TPB/1337x التي تعيد كل ما يشبه الكلمة).
+                const relevant = (res || []).filter(item => {
+                    item._relevance = relevanceScore(item.name, cleanQuery);
+                    return item._relevance >= MIN_RELEVANCE_THRESHOLD;
+                });
+
+                // إضافة النتائج فور وصولها وإعادة الرسم مباشرة (Real-time)
+                if (relevant.length > 0) {
+                    allResults = allResults.concat(relevant);
+                    document.getElementById('statsBar').classList.remove('hidden');
+                    updateStatsBar();
+                    renderResults();
+                }
+
+                return relevant;
             } catch (err) {
                 return [];
             } finally {
                 completedRequests++;
                 const currentPercent = Math.min(Math.round((completedRequests / totalRequests) * 100), 95);
-                setProgress(`تم جلب بيانات ${completedRequests} من أصل ${totalRequests} قواعد بيانات...`, currentPercent);
+                setProgress(`تم جلب بيانات ${completedRequests} من أصل ${totalRequests} قواعد بيانات... (${allResults.length} نتيجة دقيقة حتى الآن)`, currentPercent);
             }
         });
 
-        const resultsArray = await Promise.all(promises);
-        allResults = resultsArray.flat();
-        setProgress('تم استكمال سحب البيانات، جاري فرز النتائج...', 100);
+        await Promise.all(enginePromises);
+        setProgress('تم استكمال سحب البيانات وفرز النتائج', 100);
 
         if (allResults.length === 0) {
-            setStatus('<i class="fas fa-exclamation-triangle mr-2 text-lg"></i> عذراً، لم نتمكن من العثور على أي نتائج. <strong>تلميح:</strong> للأنمي والمسلسلات جرب كتابة (Season 1) بدلاً من (S01).', 'error');
+            setStatus('<i class="fas fa-exclamation-triangle mr-2 text-lg"></i> عذراً، لم نتمكن من العثور على أي نتائج دقيقة. <strong>تلميح:</strong> للأنمي والمسلسلات جرب كتابة (Season 1) بدلاً من (S01).', 'error');
         } else {
             hideStatus();
         }
 
-        const av1Count = allResults.filter(r => detectCodec(r.name).codec === 'AV1').length;
-        const x265Count = allResults.filter(r => detectCodec(r.name).codec === 'x265/HEVC').length;
-        const x264Count = allResults.filter(r => detectCodec(r.name).codec === 'x264/AVC').length;
-
-        document.getElementById('totalResults').textContent = allResults.length;
-        document.getElementById('av1Count').textContent = av1Count;
-        document.getElementById('x265Count').textContent = x265Count;
-        document.getElementById('x264Count').textContent = x264Count;
-        document.getElementById('statsBar').classList.remove('hidden');
-        
-        document.getElementById('sortSelect').value = 'codec';
-
+        updateStatsBar();
         renderResults();
     } catch (error) {
         setStatus('<i class="fas fa-wifi mr-2"></i> حدث خطأ في الشبكة، يرجى التحقق من اتصالك والمحاولة مرة أخرى.', 'error');
@@ -1031,6 +1085,18 @@ async function searchTorrents() {
         icon.className = 'fas fa-arrow-left text-sm';
         txt.textContent = 'بحث الآن';
     }
+}
+
+// تحديث شريط الإحصائيات (مفصولة لتُستدعى أثناء البث التدريجي أيضاً)
+function updateStatsBar() {
+    const av1Count = allResults.filter(r => detectCodec(r.name).codec === 'AV1').length;
+    const x265Count = allResults.filter(r => detectCodec(r.name).codec === 'x265/HEVC').length;
+    const x264Count = allResults.filter(r => detectCodec(r.name).codec === 'x264/AVC').length;
+
+    document.getElementById('totalResults').textContent = allResults.length;
+    document.getElementById('av1Count').textContent = av1Count;
+    document.getElementById('x265Count').textContent = x265Count;
+    document.getElementById('x264Count').textContent = x264Count;
 }
 
 // منع تكرار البحث عند الضغط المتتالي السريع (Debounce)
