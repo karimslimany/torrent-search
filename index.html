@@ -90,6 +90,8 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Torlock</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Uindex</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> MagnetDL</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> FitGirl</span>
         </div>
     </div>
 </header>
@@ -1051,6 +1053,65 @@ async function searchUindex(query) {
 // محرك Knaben — محرك بحث ميتا مستقل بـ API JSON مباشر (لا يعتمد على
 // نفس الخادم الوسيط المشترك مع 1337x/TGx/Lime)، يغطي عشرات المصادر
 // دفعة واحدة (TPB, YTS, Nyaa, RARBG أرشيف...)، فيعمل كمصدر احتياطي قوي
+async function searchMagnetDL(query) {
+    try {
+        const url = 'https://torrent-api-py.vercel.app/api/v1/magnetdl/' + encodeURIComponent(query);
+        let data = await smartFetch(url, 'json').catch(() => null);
+
+        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
+        if (!Array.isArray(data) || data.length === 0) {
+            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/magnetdl/' + encodeURIComponent(query);
+            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
+            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
+                const items = mirrorData.map(item => ({
+                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'MagnetDL'
+                })).filter(r => r.magnet);
+                await enrichWithIMDb(items);
+                return items;
+            }
+        }
+
+        if (Array.isArray(data)) {
+            const items = data.map(item => ({
+                name: item.name || item.title, magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'MagnetDL'
+            }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+            await enrichWithIMDb(items);
+            return items;
+        }
+        return [];
+    } catch (e) { return []; }
+}
+
+// محرك FitGirl Repacks — متخصص بريباكات الألعاب المضغوطة، عبر RSS
+// العام للموقع (لا يتطلب مصادقة)، بنفس أسلوب Nyaa/Uindex
+async function searchFitGirl(query) {
+    try {
+        const url = 'https://fitgirl-repacks.site/?s=' + encodeURIComponent(query) + '&feed=rss2';
+        const text = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        const results = Array.from(items).slice(0, 20).map(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const desc = item.querySelector('description')?.textContent || item.querySelector('encoded')?.textContent || '';
+            // استخراج رابط magnet من محتوى المقال إن وُجد مباشرة
+            const magnetMatch = desc.match(/magnet:\?[^\s"'<]*/i);
+            return {
+                name: title,
+                magnet: magnetMatch ? magnetMatch[0] : '#',
+                size: 0,
+                seeds: 0,
+                peers: 0,
+                source: 'FitGirl Repacks'
+            };
+        }).filter(r => r.magnet !== '#'); // فقط نتائج بها رابط magnet حقيقي صالح للفتح المباشر
+        return results;
+    } catch (e) { return []; }
+}
+
 async function searchKnaben(query) {
     try {
         // العنوان الصحيح للـ API هو api.knaben.org (وليس knaben.org/api)
@@ -1154,7 +1215,9 @@ async function searchTorrents() {
         { name: 'Torlock', func: searchTorrentGalaxy, delay: 300 },
         { name: 'Lime', func: searchLimeTorrents, delay: 600 },
         { name: 'Uindex', func: searchUindex, delay: 200 },
-        { name: 'Knaben', func: searchKnaben, delay: 150 }
+        { name: 'Knaben', func: searchKnaben, delay: 150 },
+        { name: 'MagnetDL', func: searchMagnetDL, delay: 400 },
+        { name: 'FitGirl', func: searchFitGirl, delay: 500 }
     ];
 
     let completedRequests = 0;
