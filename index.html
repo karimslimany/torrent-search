@@ -458,46 +458,85 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Cache داخلي لتخزين نتائج OMDb حتى لا يتم إرسال طلبات مكررة لنفس الفيلم
+// Cache داخلي لتخزين نتائج OMDb — المفتاح: "عنوان_سنة" أو "عنوان"
 const imdbCache = {};
 
-// دالة للحصول على IMDb ID من OMDb API باستخدام اسم العمل والسنة (اختياري)
+// دالة OMDb الأساسية لعنوان واحد — تُستخدم فقط من enrichWithIMDb
 async function getIMDbID(title, year) {
-    // إنشاء مفتاح فريد للكاش
     const cacheKey = title.toLowerCase().trim() + (year ? '_' + year : '');
-    
-    // إذا كانت النتيجة موجودة بالفعل في الكاش، أعدها مباشرة
-    if (imdbCache[cacheKey] !== undefined) {
-        return imdbCache[cacheKey];
-    }
-    
+    if (imdbCache[cacheKey] !== undefined) return imdbCache[cacheKey];
+
     try {
-        // بناء رابط OMDb API
-        let omdbUrl = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}&type=movie`;
-        if (year) omdbUrl += `&y=${year}`;
-        
-        const data = await smartFetch(omdbUrl, 'json');
-        
-        if (data && data.Response === 'True' && data.imdbID) {
-            // تخزين النتيجة في الكاش وإعادتها
-            imdbCache[cacheKey] = data.imdbID;
-            return data.imdbID;
+        // محاولة 1: بنوع movie مع السنة إن وُجدت
+        let url = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}&type=movie`;
+        if (year) url += `&y=${year}`;
+        const d1 = await smartFetch(url, 'json');
+        if (d1?.Response === 'True' && d1.imdbID) {
+            imdbCache[cacheKey] = d1.imdbID;
+            return d1.imdbID;
         }
-        
-        // إذا لم يجد بصيغة movie، جرب بدون تحديد النوع (قد يكون مسلسل)
-        let omdbUrlSeries = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}`;
-        if (year) omdbUrlSeries += `&y=${year}`;
-        
-        const dataSeries = await smartFetch(omdbUrlSeries, 'json');
-        if (dataSeries && dataSeries.Response === 'True' && dataSeries.imdbID) {
-            imdbCache[cacheKey] = dataSeries.imdbID;
-            return dataSeries.imdbID;
+
+        // محاولة 2: بدون تحديد النوع (مسلسل / أنمي / إلخ)
+        let url2 = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}`;
+        if (year) url2 += `&y=${year}`;
+        const d2 = await smartFetch(url2, 'json');
+        if (d2?.Response === 'True' && d2.imdbID) {
+            imdbCache[cacheKey] = d2.imdbID;
+            return d2.imdbID;
         }
     } catch (e) {}
-    
-    // تخزين null في الكاش حتى لا نكرر الطلب للعنوان نفسه
+
     imdbCache[cacheKey] = null;
     return null;
+}
+
+// ---------------------------------------------------------------
+// دالة الإثراء الذكي بالدُفعات — تُوفّر طلبات OMDb بشكل كبير
+// الفكرة: نستخرج العناوين الفريدة فقط من كل دفعة نتائج، ثم
+// نُرسل طلبات OMDb لها فقط (بحد أقصى CONCURRENCY متزامن)
+// متجاهلين أي عنوان موجود بالكاش مسبقاً.
+// ---------------------------------------------------------------
+const OMDB_CONCURRENCY = 3; // طلبات OMDb متزامنة في نفس الوقت
+
+async function enrichWithIMDb(items) {
+    // الخطوة 1: استخراج عناوين فريدة غير موجودة في الكاش
+    const uniqueTitles = new Map(); // cacheKey → { title, year, indices[] }
+
+    items.forEach((item, idx) => {
+        const { title, year } = extractTitleAndYear(item.name || '');
+        if (!title) return;
+        const cacheKey = title.toLowerCase().trim() + (year ? '_' + year : '');
+
+        // إذا كانت النتيجة موجودة بالكاش، طبّقها مباشرة دون طلب جديد
+        if (imdbCache[cacheKey] !== undefined) {
+            if (imdbCache[cacheKey]) item.imdb = imdbCache[cacheKey];
+            return;
+        }
+
+        // جمع المؤشرات لنفس العنوان معاً (قد يتكرر العنوان بجودات مختلفة)
+        if (!uniqueTitles.has(cacheKey)) {
+            uniqueTitles.set(cacheKey, { title, year, indices: [] });
+        }
+        uniqueTitles.get(cacheKey).indices.push(idx);
+    });
+
+    if (uniqueTitles.size === 0) return; // كل شيء من الكاش
+
+    // الخطوة 2: إرسال الطلبات الجديدة بحد أقصى OMDB_CONCURRENCY معاً
+    const entries = Array.from(uniqueTitles.entries()); // [cacheKey, {title,year,indices}]
+
+    for (let i = 0; i < entries.length; i += OMDB_CONCURRENCY) {
+        const batch = entries.slice(i, i + OMDB_CONCURRENCY);
+        await Promise.all(batch.map(async ([cacheKey, { title, year, indices }]) => {
+            try {
+                const imdbId = await getIMDbID(title, year);
+                if (imdbId) {
+                    // طبّق النتيجة على جميع العناصر التي تشارك نفس العنوان
+                    indices.forEach(idx => { items[idx].imdb = imdbId; });
+                }
+            } catch (e) {}
+        }));
+    }
 }
 
 // دالة لاستخراج اسم العمل والسنة من عنوان التورنت
@@ -697,7 +736,7 @@ function renderResults() {
                 <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
                     <i class="fas fa-link"></i> نسخ
                 </button>
-                <button onclick="openSubtitlePopup('${escapeHtml(item.imdb || "")}', '${escapeHtml(currentSearchQuery)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
+                <button onclick="openSubtitlePopup('${escapeHtml(item.imdb || "")}', '${escapeHtml(item.name)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
                     <i class="far fa-closed-captioning"></i> ترجمة
                 </button>
                 <a href="${escapeHtml(magnet)}" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white w-12 rounded-xl transition-colors flex items-center justify-center shadow-sm" title="الفتح بالتطبيق المباشر">
@@ -743,16 +782,8 @@ async function searchTPB(query) {
                 magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
                 size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
             }));
-            // استخراج IMDb ID لكل عنصر عبر OMDb
-            await Promise.all(items.map(async (item) => {
-                try {
-                    const { title, year } = extractTitleAndYear(item.name);
-                    if (title) {
-                        const imdbId = await getIMDbID(title, year);
-                        if (imdbId) item.imdb = imdbId;
-                    }
-                } catch (e) {}
-            }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+            await enrichWithIMDb(items);
             return items;
         }
         return [];
@@ -768,16 +799,8 @@ async function searchEZTV(query) {
                 name: t.title || 'Unknown', magnet: t.magnet_url || '#',
                 size: parseInt(t.size_bytes) || 0, seeds: parseInt(t.seeds) || 0, peers: parseInt(t.peers) || 0, source: 'EZTV'
             }));
-            // استخراج IMDb ID لكل عنصر عبر OMDb
-            await Promise.all(items.map(async (item) => {
-                try {
-                    const { title, year } = extractTitleAndYear(item.name);
-                    if (title) {
-                        const imdbId = await getIMDbID(title, year);
-                        if (imdbId) item.imdb = imdbId;
-                    }
-                } catch (e) {}
-            }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+            await enrichWithIMDb(items);
             return items;
         }
         return [];
@@ -806,16 +829,8 @@ async function searchNyaa(query) {
                 size: sizeBytes, seeds: 0, peers: 0, source: 'Nyaa Anime'
             };
         });
-        // استخراج IMDb ID لكل عنصر عبر OMDb
-        await Promise.all(results.map(async (item) => {
-            try {
-                const { title, year } = extractTitleAndYear(item.name);
-                if (title) {
-                    const imdbId = await getIMDbID(title, year);
-                    if (imdbId) item.imdb = imdbId;
-                }
-            } catch (e) {}
-        }));
+        // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+        await enrichWithIMDb(results);
         return results;
     } catch (e) { return []; }
 }
@@ -829,16 +844,8 @@ async function search1337x(query) {
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: '1337x'
             }));
-            // استخراج IMDb ID لكل عنصر عبر OMDb
-            await Promise.all(items.map(async (item) => {
-                try {
-                    const { title, year } = extractTitleAndYear(item.name);
-                    if (title) {
-                        const imdbId = await getIMDbID(title, year);
-                        if (imdbId) item.imdb = imdbId;
-                    }
-                } catch (e) {}
-            }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+            await enrichWithIMDb(items);
             return items;
         }
         return [];
@@ -854,16 +861,8 @@ async function searchTorrentGalaxy(query) {
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'TorrentGalaxy'
             }));
-            // استخراج IMDb ID لكل عنصر عبر OMDb
-            await Promise.all(items.map(async (item) => {
-                try {
-                    const { title, year } = extractTitleAndYear(item.name);
-                    if (title) {
-                        const imdbId = await getIMDbID(title, year);
-                        if (imdbId) item.imdb = imdbId;
-                    }
-                } catch (e) {}
-            }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+            await enrichWithIMDb(items);
             return items;
         }
         return [];
@@ -879,16 +878,8 @@ async function searchLimeTorrents(query) {
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'LimeTorrents'
             }));
-            // استخراج IMDb ID لكل عنصر عبر OMDb
-            await Promise.all(items.map(async (item) => {
-                try {
-                    const { title, year } = extractTitleAndYear(item.name);
-                    if (title) {
-                        const imdbId = await getIMDbID(title, year);
-                        if (imdbId) item.imdb = imdbId;
-                    }
-                } catch (e) {}
-            }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+            await enrichWithIMDb(items);
             return items;
         }
         return [];
@@ -989,8 +980,13 @@ async function searchTorrents() {
     }
 }
 
+// منع تكرار البحث عند الضغط المتتالي السريع (Debounce)
+let searchDebounceTimer = null;
 document.getElementById('searchInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') searchTorrents();
+    if (e.key === 'Enter') {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(searchTorrents, 300);
+    }
 });
 </script>
 </body>
