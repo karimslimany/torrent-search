@@ -613,7 +613,7 @@ function extractTitleAndYear(torrentName) {
     return { title: title.trim(), year };
 }
 
-// أداة جلب البيانات بـ 3 مسارات لتجنب الحظر
+// أداة جلب البيانات بمسارات متعددة لتجنب الحظر
 // جلب مع مهلة زمنية محددة — يُلغي الطلب تلقائياً إذا تجاوز المهلة
 // لتفادي بقاء الصفحة "عالقة" في انتظار خادم بطيء أو معطل
 async function fetchWithTimeout(url, timeoutMs) {
@@ -627,11 +627,17 @@ async function fetchWithTimeout(url, timeoutMs) {
     }
 }
 
+// البروكسي الخاص (Cloudflare Worker) — أسرع وأكثر موثوقية من البروكسيات
+// العامة لأنه غير مزدحم بطلبات آلاف المواقع الأخرى. يُجرَّب فور فشل
+// الاتصال المباشر، وقبل أي بروكسي عام احتياطي.
+const PRIVATE_PROXY = 'https://my-cors-proxy.karimslimany.workers.dev/?url=';
+
 async function smartFetch(url, type = 'json') {
     // قائمة موسّعة من بروكسيات CORS — معظم المحركات (خلافاً لـ TPB) لا
     // تدعم CORS من خوادمها مباشرة، فتعتمد كلياً على نجاح أحد هذه البروكسيات.
     // وجود أكثر من بديل يرفع معدل النجاح إذا كان أحدها محظوراً أو مزدحماً.
     const proxies = [
+        `${PRIVATE_PROXY}${encodeURIComponent(url)}`,
         `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
         `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
@@ -1180,7 +1186,7 @@ async function searchKnaben(query) {
         });
 
         // smartFetch مصمم لـ GET فقط، لذا نُرسل الطلب يدوياً هنا
-        // مع نفس فلسفة timeout ثم بروكسي احتياطي عند الفشل
+        // مع نفس فلسفة timeout ثم بروكسي خاص فبروكسي عام عند الفشل
         let data = null;
         try {
             const controller = new AbortController();
@@ -1195,7 +1201,24 @@ async function searchKnaben(query) {
             if (res.ok) data = await res.json();
         } catch (e) {}
 
-        // محاولة احتياطية عبر بروكسي CORS إذا فشل الطلب المباشر (نادراً ما يلزم لـ API يدعم CORS)
+        // محاولة احتياطية أولى عبر البروكسي الخاص (Cloudflare Worker) — يدعم POST
+        if (!data) {
+            try {
+                const privateProxyUrl = `${PRIVATE_PROXY}${encodeURIComponent(apiUrl)}`;
+                const controllerP = new AbortController();
+                const timerP = setTimeout(() => controllerP.abort(), 7000);
+                const resP = await fetch(privateProxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: requestBody,
+                    signal: controllerP.signal
+                });
+                clearTimeout(timerP);
+                if (resP.ok) data = await resP.json();
+            } catch (e) {}
+        }
+
+        // محاولة احتياطية أخيرة عبر بروكسي CORS عام إذا فشل ما سبق
         if (!data) {
             try {
                 const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
