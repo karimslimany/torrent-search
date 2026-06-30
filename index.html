@@ -895,8 +895,7 @@ async function searchTPB(query) {
                 size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
             }));
             // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
         return [];
     } catch (e) { return []; }
@@ -912,8 +911,7 @@ async function searchEZTV(query) {
                 size: parseInt(t.size_bytes) || 0, seeds: parseInt(t.seeds) || 0, peers: parseInt(t.peers) || 0, source: 'EZTV'
             }));
             // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
         return [];
     } catch (e) { return []; }
@@ -941,8 +939,6 @@ async function searchNyaa(query) {
                 size: sizeBytes, seeds: 0, peers: 0, source: 'Nyaa Anime'
             };
         });
-        // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
-        await enrichWithIMDb(results);
         return results;
     } catch (e) { return []; }
 }
@@ -960,8 +956,7 @@ async function search1337x(query) {
                 name: item.Name || item.name, magnet: item.Magnet || item.magnet,
                 size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: '1337x'
             })).filter(r => r.magnet);
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
 
         // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
@@ -972,8 +967,7 @@ async function search1337x(query) {
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: '1337x'
             }));
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
         return [];
     } catch (e) { return []; }
@@ -994,8 +988,7 @@ async function searchTorrentGalaxy(query) {
                 name: item.Name || item.name, magnet: item.Magnet || item.magnet,
                 size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'Torlock'
             })).filter(r => r.magnet);
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
 
         // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
@@ -1006,8 +999,7 @@ async function searchTorrentGalaxy(query) {
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'Torlock'
             }));
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
         return [];
     } catch (e) { return []; }
@@ -1025,8 +1017,7 @@ async function searchLimeTorrents(query) {
                 name: item.Name || item.name, magnet: item.Magnet || item.magnet,
                 size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'LimeTorrents'
             })).filter(r => r.magnet);
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
 
         // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
@@ -1037,8 +1028,7 @@ async function searchLimeTorrents(query) {
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'LimeTorrents'
             }));
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
         return [];
     } catch (e) { return []; }
@@ -1073,8 +1063,6 @@ async function searchUindex(query) {
                 source: 'Uindex'
             };
         }).filter(r => r.magnet !== '#');
-        // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
-        await enrichWithIMDb(results);
         return results;
     } catch (e) { return []; }
 }
@@ -1097,8 +1085,7 @@ async function searchMagnetDL(query) {
                 name: item.Name || item.name, magnet: item.Magnet || item.magnet,
                 size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'MagnetDL'
             })).filter(r => r.magnet);
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
 
         // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
@@ -1109,8 +1096,7 @@ async function searchMagnetDL(query) {
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'MagnetDL'
             }));
-            await enrichWithIMDb(items);
-            return items;
+                return items;
         }
         return [];
     } catch (e) { return []; }
@@ -1143,7 +1129,6 @@ async function searchBTDigg(query) {
             };
         }).filter(r => r.name && r.magnet.startsWith('magnet:'));
 
-        await enrichWithIMDb(items);
         return items;
     } catch (e) { return []; }
 }
@@ -1175,7 +1160,6 @@ async function searchExtTorrents(query) {
             };
         }).filter(r => r.magnet.startsWith('magnet:'));
 
-        await enrichWithIMDb(results);
         return results;
     } catch (e) { return []; }
 }
@@ -1257,8 +1241,6 @@ async function searchKnaben(query) {
             source: 'Knaben'
         })).filter(r => r.magnet !== '#');
 
-        // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
-        await enrichWithIMDb(items);
         return items;
     } catch (e) { return []; }
 }
@@ -1327,9 +1309,6 @@ async function searchTorrents() {
                 console.log(`[${engine.name}] نتائج خام: ${(res || []).length}`);
 
                 // ---- فلترة الضوضاء: استبعاد النتائج غير ذات الصلة ----
-                // حساب درجة تطابق كل نتيجة مع كلمة البحث، واستبعاد
-                // أي نتيجة تحت الحد الأدنى (نتائج "تخمينية" من محركات
-                // واسعة مثل TPB/1337x التي تعيد كل ما يشبه الكلمة).
                 const relevant = (res || []).filter(item => {
                     item._relevance = relevanceScore(item.name, cleanQuery);
                     return item._relevance >= MIN_RELEVANCE_THRESHOLD;
@@ -1337,12 +1316,16 @@ async function searchTorrents() {
 
                 console.log(`[${engine.name}] بعد فلترة الدقة: ${relevant.length}`);
 
-                // إضافة النتائج فور وصولها وإعادة الرسم مباشرة (Real-time)
+                // إضافة النتائج وعرضها فوراً بدون انتظار OMDb
                 if (relevant.length > 0) {
                     allResults = allResults.concat(relevant);
                     document.getElementById('statsBar').classList.remove('hidden');
                     updateStatsBar();
                     renderResults();
+
+                    // إثراء IMDb في الخلفية بدون انتظار — يُحدّث زر الترجمة لاحقاً
+                    // بدون أن يُعيق ظهور النتائج أو يُبطئ المحركات الأخرى
+                    enrichWithIMDb(relevant).then(() => renderResults()).catch(() => {});
                 }
 
                 return relevant;
