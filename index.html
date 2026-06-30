@@ -88,6 +88,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Nyaa</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> 1337x</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TGx</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Uindex</span>
         </div>
     </div>
 </header>
@@ -733,15 +734,15 @@ function renderResults() {
             </div>
             
             <div class="flex gap-2 mt-auto pt-2">
-                <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
-                    <i class="fas fa-link"></i> نسخ
-                </button>
+                <a href="${escapeHtml(magnet)}" class="btn-primary w-12 py-2.5 rounded-xl text-white transition-colors flex items-center justify-center shadow-sm flex-shrink-0" title="الفتح بالتطبيق المباشر">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
                 <button onclick="openSubtitlePopup('${escapeHtml(item.imdb || "")}', '${escapeHtml(item.name)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
                     <i class="far fa-closed-captioning"></i> ترجمة
                 </button>
-                <a href="${escapeHtml(magnet)}" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white w-12 rounded-xl transition-colors flex items-center justify-center shadow-sm" title="الفتح بالتطبيق المباشر">
-                    <i class="fas fa-external-link-alt"></i>
-                </a>
+                <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
+                    <i class="fas fa-link"></i> نسخ
+                </button>
             </div>
         </div>`;
     }).join('');
@@ -777,7 +778,8 @@ async function searchTPB(query) {
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
         const data = await smartFetch(url, 'json');
         if (Array.isArray(data)) {
-            const items = data.filter(item => item.id !== '0' && item.name).map(item => ({
+            // تحديد حد أقصى 15 نتيجة لموازنة TPB مع بقية المصادر
+            const items = data.filter(item => item.id !== '0' && item.name).slice(0, 15).map(item => ({
                 name: item.name,
                 magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
                 size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
@@ -886,6 +888,41 @@ async function searchLimeTorrents(query) {
     } catch (e) { return []; }
 }
 
+async function searchUindex(query) {
+    try {
+        // uindex.org — محرك بحث متعدد المصادر يدعم RSS
+        const url = 'https://uindex.org/?q=' + encodeURIComponent(query) + '&iht=7&rss=1';
+        const text = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        const results = Array.from(items).slice(0, 20).map(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const enclosure = item.querySelector('enclosure');
+            const link = enclosure?.getAttribute('url') || item.querySelector('link')?.textContent || '#';
+            const sizeAttr = enclosure?.getAttribute('length') || '0';
+            // استخراج magnet من description إن وُجد
+            const desc = item.querySelector('description')?.textContent || '';
+            const magnetMatch = desc.match(/magnet:\?[^\s"<]*/i);
+            const magnet = magnetMatch ? magnetMatch[0] : (link.startsWith('magnet') ? link : '#');
+            // استخراج Seeders من description
+            const seedMatch = desc.match(/[Ss]eeders?[:\s]+(\d+)/);
+            const seeds = seedMatch ? parseInt(seedMatch[1]) : 0;
+            return {
+                name: title,
+                magnet: magnet,
+                size: parseInt(sizeAttr) || 0,
+                seeds: seeds,
+                peers: 0,
+                source: 'Uindex'
+            };
+        }).filter(r => r.magnet !== '#');
+        // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+        await enrichWithIMDb(results);
+        return results;
+    } catch (e) { return []; }
+}
+
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
     const cleanQuery = sanitizeQuery(rawQuery);
@@ -921,7 +958,8 @@ async function searchTorrents() {
         { name: 'Nyaa', func: searchNyaa, delay: 100 },
         { name: '1337x', func: search1337x, delay: 0 },
         { name: 'TGx', func: searchTorrentGalaxy, delay: 300 },
-        { name: 'Lime', func: searchLimeTorrents, delay: 600 }
+        { name: 'Lime', func: searchLimeTorrents, delay: 600 },
+        { name: 'Uindex', func: searchUindex, delay: 200 }
     ];
 
     let completedRequests = 0;
