@@ -663,7 +663,21 @@ async function smartFetch(url, type = 'json') {
                     const raw = wrapped.contents || '';
                     return type === 'json' ? JSON.parse(raw) : raw;
                 }
-                return type === 'json' ? await res.json() : await res.text();
+
+                if (type === 'json') {
+                    // تحقق إضافي: بعض البروكسيات (وخصوصاً البروكسي الخاص إذا
+                    // أُسيء ضبطه) قد تُعيد HTML 200 OK بدل JSON الفعلي المطلوب
+                    // (مثلاً صفحة خطأ أو موقع مختلف تماماً). نتحقق من صحة
+                    // الـJSON فعلياً قبل قبول النتيجة، وإلا ننتقل للبروكسي التالي.
+                    const rawText = await res.text();
+                    try {
+                        return JSON.parse(rawText);
+                    } catch (parseErr) {
+                        continue; // المحتوى ليس JSON صالحاً، جرّب البروكسي التالي
+                    }
+                }
+
+                return await res.text();
             }
         } catch (e) {}
     }
@@ -935,29 +949,29 @@ async function searchNyaa(query) {
 
 async function search1337x(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/1337x/' + encodeURIComponent(query);
-        let data = await smartFetch(url, 'json').catch(() => null);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app، مع الاحتفاظ
+        // بالخادم الأصلي كمحاولة احتياطية تالية (قد يعود للعمل لاحقاً)
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/1337x/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
 
-        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
-        if (!Array.isArray(data) || data.length === 0) {
-            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/1337x/' + encodeURIComponent(query);
-            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
-            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
-                const items = mirrorData.map(item => ({
-                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
-                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: '1337x'
-                })).filter(r => r.magnet);
-                await enrichWithIMDb(items);
-                return items;
-            }
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: '1337x'
+            })).filter(r => r.magnet);
+            await enrichWithIMDb(items);
+            return items;
         }
 
-        if (Array.isArray(data)) {
-            const items = data.map(item => ({
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/1337x/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: '1337x'
             }));
-            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
             await enrichWithIMDb(items);
             return items;
         }
@@ -970,29 +984,28 @@ async function search1337x(query) {
 // عبر نفس الخادم، مع الحفاظ على اسم الدالة لتفادي تغيير أي استدعاء آخر
 async function searchTorrentGalaxy(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/torlock/' + encodeURIComponent(query);
-        let data = await smartFetch(url, 'json').catch(() => null);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/torlock/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
 
-        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
-        if (!Array.isArray(data) || data.length === 0) {
-            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/torlock/' + encodeURIComponent(query);
-            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
-            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
-                const items = mirrorData.map(item => ({
-                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
-                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'Torlock'
-                })).filter(r => r.magnet);
-                await enrichWithIMDb(items);
-                return items;
-            }
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'Torlock'
+            })).filter(r => r.magnet);
+            await enrichWithIMDb(items);
+            return items;
         }
 
-        if (Array.isArray(data)) {
-            const items = data.map(item => ({
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/torlock/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'Torlock'
             }));
-            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
             await enrichWithIMDb(items);
             return items;
         }
@@ -1002,29 +1015,28 @@ async function searchTorrentGalaxy(query) {
 
 async function searchLimeTorrents(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/limetorrents/' + encodeURIComponent(query);
-        let data = await smartFetch(url, 'json').catch(() => null);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/limetorrent/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
 
-        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
-        if (!Array.isArray(data) || data.length === 0) {
-            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/limetorrent/' + encodeURIComponent(query);
-            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
-            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
-                const items = mirrorData.map(item => ({
-                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
-                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'LimeTorrents'
-                })).filter(r => r.magnet);
-                await enrichWithIMDb(items);
-                return items;
-            }
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'LimeTorrents'
+            })).filter(r => r.magnet);
+            await enrichWithIMDb(items);
+            return items;
         }
 
-        if (Array.isArray(data)) {
-            const items = data.map(item => ({
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/limetorrents/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'LimeTorrents'
             }));
-            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
             await enrichWithIMDb(items);
             return items;
         }
@@ -1075,29 +1087,28 @@ async function searchUindex(query) {
 // دفعة واحدة (TPB, YTS, Nyaa, RARBG أرشيف...)، فيعمل كمصدر احتياطي قوي
 async function searchMagnetDL(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/magnetdl/' + encodeURIComponent(query);
-        let data = await smartFetch(url, 'json').catch(() => null);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/magnetdl/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
 
-        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
-        if (!Array.isArray(data) || data.length === 0) {
-            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/magnetdl/' + encodeURIComponent(query);
-            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
-            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
-                const items = mirrorData.map(item => ({
-                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
-                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'MagnetDL'
-                })).filter(r => r.magnet);
-                await enrichWithIMDb(items);
-                return items;
-            }
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'MagnetDL'
+            })).filter(r => r.magnet);
+            await enrichWithIMDb(items);
+            return items;
         }
 
-        if (Array.isArray(data)) {
-            const items = data.map(item => ({
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/magnetdl/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
                 size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'MagnetDL'
             }));
-            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
             await enrichWithIMDb(items);
             return items;
         }
