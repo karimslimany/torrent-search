@@ -87,7 +87,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> EZTV</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Nyaa</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> 1337x</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TGx</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Torlock</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Uindex</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben</span>
         </div>
@@ -914,7 +914,22 @@ async function searchNyaa(query) {
 async function search1337x(query) {
     try {
         const url = 'https://torrent-api-py.vercel.app/api/v1/1337x/' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json');
+        let data = await smartFetch(url, 'json').catch(() => null);
+
+        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
+        if (!Array.isArray(data) || data.length === 0) {
+            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/1337x/' + encodeURIComponent(query);
+            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
+            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
+                const items = mirrorData.map(item => ({
+                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: '1337x'
+                })).filter(r => r.magnet);
+                await enrichWithIMDb(items);
+                return items;
+            }
+        }
+
         if (Array.isArray(data)) {
             const items = data.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
@@ -928,14 +943,32 @@ async function search1337x(query) {
     } catch (e) { return []; }
 }
 
+// ملاحظة: موقع TorrentGalaxy (TGx) أُغلق نهائياً في يونيو 2024 ولم يعد
+// متاحاً بأي شكل، لذا استُبدل هنا بمحرك Torlock الفعّال والموثوق
+// عبر نفس الخادم، مع الحفاظ على اسم الدالة لتفادي تغيير أي استدعاء آخر
 async function searchTorrentGalaxy(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/tgx/' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json');
+        const url = 'https://torrent-api-py.vercel.app/api/v1/torlock/' + encodeURIComponent(query);
+        let data = await smartFetch(url, 'json').catch(() => null);
+
+        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
+        if (!Array.isArray(data) || data.length === 0) {
+            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/torlock/' + encodeURIComponent(query);
+            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
+            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
+                const items = mirrorData.map(item => ({
+                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'Torlock'
+                })).filter(r => r.magnet);
+                await enrichWithIMDb(items);
+                return items;
+            }
+        }
+
         if (Array.isArray(data)) {
             const items = data.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
-                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'TorrentGalaxy'
+                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'Torlock'
             }));
             // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
             await enrichWithIMDb(items);
@@ -948,7 +981,22 @@ async function searchTorrentGalaxy(query) {
 async function searchLimeTorrents(query) {
     try {
         const url = 'https://torrent-api-py.vercel.app/api/v1/limetorrents/' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json');
+        let data = await smartFetch(url, 'json').catch(() => null);
+
+        // مرآة احتياطية مستقلة إذا فشل الخادم الأساسي أو رجع فارغاً
+        if (!Array.isArray(data) || data.length === 0) {
+            const mirrorUrl = 'https://itorrentsearch.vercel.app/api/limetorrent/' + encodeURIComponent(query);
+            const mirrorData = await smartFetch(mirrorUrl, 'json').catch(() => null);
+            if (Array.isArray(mirrorData) && mirrorData.length > 0) {
+                const items = mirrorData.map(item => ({
+                    name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                    size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'LimeTorrents'
+                })).filter(r => r.magnet);
+                await enrichWithIMDb(items);
+                return items;
+            }
+        }
+
         if (Array.isArray(data)) {
             const items = data.map(item => ({
                 name: item.name || item.title, magnet: item.magnet,
@@ -1000,28 +1048,68 @@ async function searchUindex(query) {
 // محرك Knaben — محرك بحث ميتا مستقل بـ API JSON مباشر (لا يعتمد على
 // نفس الخادم الوسيط المشترك مع 1337x/TGx/Lime)، يغطي عشرات المصادر
 // دفعة واحدة، فيعمل كمصدر احتياطي قوي عند تعطل أي خادم آخر
+// محرك Knaben — محرك بحث ميتا مستقل بـ API JSON مباشر (لا يعتمد على
+// نفس الخادم الوسيط المشترك مع 1337x/TGx/Lime)، يغطي عشرات المصادر
+// دفعة واحدة (TPB, YTS, Nyaa, RARBG أرشيف...)، فيعمل كمصدر احتياطي قوي
 async function searchKnaben(query) {
     try {
-        // الـ API يقبل GET بمعاملات بسيطة — أكثر توافقاً مع smartFetch
-        const getUrl = `https://knaben.org/api/v1?search=${encodeURIComponent(query)}&order_by=seeders&order_direction=desc&size=30&hide_unsafe=true`;
-        const data = await smartFetch(getUrl, 'json');
+        // العنوان الصحيح للـ API هو api.knaben.org (وليس knaben.org/api)
+        // ويتطلب طلب POST بجسم JSON حسب التوثيق الرسمي
+        const apiUrl = 'https://api.knaben.org/v1';
+        const requestBody = JSON.stringify({
+            search_field: 'title',
+            query: query,
+            order_by: 'seeders',
+            order_direction: 'desc',
+            from: 0,
+            size: 30,
+            hide_unsafe: true,
+            hide_xxx: true
+        });
 
-        const list = Array.isArray(data) ? data : (data?.hits || data?.results || []);
-        if (!Array.isArray(list)) return [];
+        // smartFetch مصمم لـ GET فقط، لذا نُرسل الطلب يدوياً هنا
+        // مع نفس فلسفة timeout ثم بروكسي احتياطي عند الفشل
+        let data = null;
+        try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 7000);
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: requestBody,
+                signal: controller.signal
+            });
+            clearTimeout(timer);
+            if (res.ok) data = await res.json();
+        } catch (e) {}
 
-        const items = list.slice(0, 30).map(item => {
-            const name = item.title || item.name || 'Unknown';
-            const hash = item.hash || item.infoHash || item.info_hash || '';
-            const magnet = item.magnetUrl || item.magnet || (hash ? 'magnet:?xt=urn:btih:' + hash + '&dn=' + encodeURIComponent(name) + '&tr=udp://tracker.opentrackr.org:1337/announce' : '#');
-            return {
-                name: name,
-                magnet: magnet,
-                size: parseInt(item.bytes || item.size) || 0,
-                seeds: parseInt(item.seeders || item.seeds) || 0,
-                peers: parseInt(item.peers || item.leechers) || 0,
-                source: 'Knaben'
-            };
-        }).filter(r => r.magnet !== '#');
+        // محاولة احتياطية عبر بروكسي CORS إذا فشل الطلب المباشر (نادراً ما يلزم لـ API يدعم CORS)
+        if (!data) {
+            try {
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+                const controller2 = new AbortController();
+                const timer2 = setTimeout(() => controller2.abort(), 7000);
+                const res2 = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: requestBody,
+                    signal: controller2.signal
+                });
+                clearTimeout(timer2);
+                if (res2.ok) data = await res2.json();
+            } catch (e) {}
+        }
+
+        if (!data || !Array.isArray(data.hits)) return [];
+
+        const items = data.hits.map(hit => ({
+            name: hit.title || 'Unknown',
+            magnet: hit.magnetUrl || hit.link || '#',
+            size: parseInt(hit.bytes) || 0,
+            seeds: parseInt(hit.seeders) || 0,
+            peers: parseInt(hit.peers) || 0,
+            source: 'Knaben'
+        })).filter(r => r.magnet !== '#');
 
         // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
         await enrichWithIMDb(items);
@@ -1063,7 +1151,7 @@ async function searchTorrents() {
         { name: 'EZTV', func: searchEZTV, delay: 0 },
         { name: 'Nyaa', func: searchNyaa, delay: 100 },
         { name: '1337x', func: search1337x, delay: 0 },
-        { name: 'TGx', func: searchTorrentGalaxy, delay: 300 },
+        { name: 'Torlock', func: searchTorrentGalaxy, delay: 300 },
         { name: 'Lime', func: searchLimeTorrents, delay: 600 },
         { name: 'Uindex', func: searchUindex, delay: 200 },
         { name: 'Knaben', func: searchKnaben, delay: 150 }
@@ -1086,6 +1174,9 @@ async function searchTorrents() {
             try {
                 const res = await engine.func(cleanQuery);
 
+                // تشخيص: عدد النتائج الخام لكل محرك قبل الفلترة (تظهر في console فقط، لا تؤثر على الواجهة)
+                console.log(`[${engine.name}] نتائج خام: ${(res || []).length}`);
+
                 // ---- فلترة الضوضاء: استبعاد النتائج غير ذات الصلة ----
                 // حساب درجة تطابق كل نتيجة مع كلمة البحث، واستبعاد
                 // أي نتيجة تحت الحد الأدنى (نتائج "تخمينية" من محركات
@@ -1094,6 +1185,8 @@ async function searchTorrents() {
                     item._relevance = relevanceScore(item.name, cleanQuery);
                     return item._relevance >= MIN_RELEVANCE_THRESHOLD;
                 });
+
+                console.log(`[${engine.name}] بعد فلترة الدقة: ${relevant.length}`);
 
                 // إضافة النتائج فور وصولها وإعادة الرسم مباشرة (Real-time)
                 if (relevant.length > 0) {
