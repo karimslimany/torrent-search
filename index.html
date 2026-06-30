@@ -89,6 +89,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> 1337x</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TGx</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Uindex</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben</span>
         </div>
     </div>
 </header>
@@ -262,7 +263,7 @@ function relevanceScore(resultName, query) {
 
 // الحد الأدنى لدرجة التطابق لقبول النتيجة (فلترة الضوضاء)
 // 40 تعني أن نصف كلمات البحث تقريباً يجب أن تكون موجودة على الأقل
-const MIN_RELEVANCE_THRESHOLD = 40;
+const MIN_RELEVANCE_THRESHOLD = 35;
 
 function detectCodec(name) {
     const lower = name.toLowerCase();
@@ -610,6 +611,19 @@ function extractTitleAndYear(torrentName) {
 }
 
 // أداة جلب البيانات بـ 3 مسارات لتجنب الحظر
+// جلب مع مهلة زمنية محددة — يُلغي الطلب تلقائياً إذا تجاوز المهلة
+// لتفادي بقاء الصفحة "عالقة" في انتظار خادم بطيء أو معطل
+async function fetchWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+        return res;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 async function smartFetch(url, type = 'json') {
     const proxies = [
         `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -617,14 +631,17 @@ async function smartFetch(url, type = 'json') {
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
     ];
 
+    // مهلة 7 ثوانٍ لكل محاولة — تكفي للخوادم السليمة وتتجاوز بسرعة المعطلة
+    const TIMEOUT_MS = 7000;
+
     try {
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = await fetchWithTimeout(url, TIMEOUT_MS);
         if(res.ok) return type === 'json' ? await res.json() : await res.text();
     } catch(e) {}
 
     for (let proxy of proxies) {
         try {
-            const res = await fetch(proxy, { cache: 'no-store' });
+            const res = await fetchWithTimeout(proxy, TIMEOUT_MS);
             if(res.ok) return type === 'json' ? await res.json() : await res.text();
         } catch (e) {}
     }
@@ -835,8 +852,8 @@ async function searchTPB(query) {
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
         const data = await smartFetch(url, 'json');
         if (Array.isArray(data)) {
-            // تحديد حد أقصى 15 نتيجة لموازنة TPB مع بقية المصادر
-            const items = data.filter(item => item.id !== '0' && item.name).slice(0, 15).map(item => ({
+            // حد أقصى 30 نتيجة (الفلترة بالدقة تستبعد غير ذي الصلة تلقائياً)
+            const items = data.filter(item => item.id !== '0' && item.name).slice(0, 30).map(item => ({
                 name: item.name,
                 magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
                 size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
@@ -980,6 +997,38 @@ async function searchUindex(query) {
     } catch (e) { return []; }
 }
 
+// محرك Knaben — محرك بحث ميتا مستقل بـ API JSON مباشر (لا يعتمد على
+// نفس الخادم الوسيط المشترك مع 1337x/TGx/Lime)، يغطي عشرات المصادر
+// دفعة واحدة، فيعمل كمصدر احتياطي قوي عند تعطل أي خادم آخر
+async function searchKnaben(query) {
+    try {
+        // الـ API يقبل GET بمعاملات بسيطة — أكثر توافقاً مع smartFetch
+        const getUrl = `https://knaben.org/api/v1?search=${encodeURIComponent(query)}&order_by=seeders&order_direction=desc&size=30&hide_unsafe=true`;
+        const data = await smartFetch(getUrl, 'json');
+
+        const list = Array.isArray(data) ? data : (data?.hits || data?.results || []);
+        if (!Array.isArray(list)) return [];
+
+        const items = list.slice(0, 30).map(item => {
+            const name = item.title || item.name || 'Unknown';
+            const hash = item.hash || item.infoHash || item.info_hash || '';
+            const magnet = item.magnetUrl || item.magnet || (hash ? 'magnet:?xt=urn:btih:' + hash + '&dn=' + encodeURIComponent(name) + '&tr=udp://tracker.opentrackr.org:1337/announce' : '#');
+            return {
+                name: name,
+                magnet: magnet,
+                size: parseInt(item.bytes || item.size) || 0,
+                seeds: parseInt(item.seeders || item.seeds) || 0,
+                peers: parseInt(item.peers || item.leechers) || 0,
+                source: 'Knaben'
+            };
+        }).filter(r => r.magnet !== '#');
+
+        // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+        await enrichWithIMDb(items);
+        return items;
+    } catch (e) { return []; }
+}
+
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
     const cleanQuery = sanitizeQuery(rawQuery);
@@ -1016,7 +1065,8 @@ async function searchTorrents() {
         { name: '1337x', func: search1337x, delay: 0 },
         { name: 'TGx', func: searchTorrentGalaxy, delay: 300 },
         { name: 'Lime', func: searchLimeTorrents, delay: 600 },
-        { name: 'Uindex', func: searchUindex, delay: 200 }
+        { name: 'Uindex', func: searchUindex, delay: 200 },
+        { name: 'Knaben', func: searchKnaben, delay: 150 }
     ];
 
     let completedRequests = 0;
