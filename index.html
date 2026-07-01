@@ -45,6 +45,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 .progress-fill { height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width 0.3s ease-out; }
 .badge-pulse { animation: pulse-soft 2s infinite; }
 @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
 /* ===== نافذة الترجمة المدمجة ===== */
 #subtitleModal { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); }
 #subtitleModal.active { display:flex; }
@@ -61,7 +62,6 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 .sub-item-meta { font-size:0.72rem; color:#64748b; margin-top:0.25rem; display:flex; gap:0.75rem; flex-wrap:wrap; }
 .sub-dl-btn { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; border-radius:0.6rem; padding:0.5rem 1rem; font-size:0.8rem; font-weight:700; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:0.4rem; transition:all 0.2s; flex-shrink:0; }
 .sub-dl-btn:hover { transform:scale(1.04); box-shadow:0 6px 16px -4px rgba(99,102,241,0.5); }
-.sub-dl-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
 .sub-loader { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem 0; gap:1rem; }
 .sub-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.05); border-top-color:#818cf8; border-radius:50%; animation:spin 1s linear infinite; }
 .sub-empty { text-align:center; padding:3rem 1rem; color:#64748b; }
@@ -81,10 +81,13 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                 <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">محرك بحث التورنت الذكي</p>
             </div>
         </div>
-        <div class="flex items-center gap-4 text-xs font-medium text-slate-400">
+        <div class="hidden lg:flex flex-wrap items-center gap-4 text-xs font-medium text-slate-400">
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben (Meta)</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> The Pirate Bay</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> SolidTorrents (Meta)</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> SolidTorrents</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> BitSearch</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> AniDex</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Tokyo Toshokan</span>
         </div>
     </div>
 </header>
@@ -93,7 +96,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
     <div class="text-center mb-12">
         <h2 class="text-3xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-sm">ابحث عن المحتوى بأفضل جودة</h2>
         <p class="text-slate-400 text-sm md:text-base mb-8 max-w-2xl mx-auto leading-relaxed">
-            محرك بحث فائق السرعة يعتمد على أقوى قواعد البيانات المستقرة عالمياً، مع فرز تلقائي لتقديم صيغ الجيل الجديد (AV1 و x265) في الصدارة.
+            محرك بحث فائق السرعة يعتمد على تجميع البيانات التدفّقية من أقوى خوادم التورنت والـ APIs المستقرة عالمياً.
         </p>
 
         <div class="max-w-3xl mx-auto relative group">
@@ -102,7 +105,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                     <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                         <i class="fas fa-search text-slate-500"></i>
                     </div>
-                    <input type="text" id="searchInput" placeholder="ابحث بدقة (مثال: Inception أو Attack on Titan Season 1)..." 
+                    <input type="text" id="searchInput" placeholder="ابحث بدقة (مثال: Inception أو Attack on Titan)..." 
                         class="search-input w-full bg-card border border-slate-700 rounded-2xl pr-11 pl-4 py-4 text-lg outline-none text-white placeholder-slate-500 transition-all focus:border-indigo-500">
                 </div>
                 <button onclick="searchTorrents()" id="searchBtn" class="btn-primary px-8 py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 min-w-[120px]">
@@ -132,7 +135,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 
     <div id="statsBar" class="hidden mb-8 glass rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-700">
         <div class="flex items-center gap-4 text-sm flex-wrap justify-center">
-            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">النتائج الفعالة:</span> <span id="totalResults" class="text-white font-bold">0</span></div>
+            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">النتائج:</span> <span id="totalResults" class="text-white font-bold">0</span></div>
             <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">AV1:</span> <span id="av1Count" class="text-emerald-400 font-bold">0</span></div>
             <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">x265:</span> <span id="x265Count" class="text-blue-400 font-bold">0</span></div>
             <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">x264:</span> <span id="x264Count" class="text-amber-400 font-bold">0</span></div>
@@ -151,7 +154,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 
     <div id="loading" class="hidden flex flex-col items-center justify-center py-24">
         <div class="loader mb-6 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
-        <p class="text-slate-400 font-medium tracking-wide animate-pulse" id="loadingText">جاري المسح السريع والفرز...</p>
+        <p class="text-slate-400 font-medium tracking-wide animate-pulse" id="loadingText">جاري مسح القنوات الآمنة والفرز التدفّقي...</p>
     </div>
 
     <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -194,22 +197,14 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                     <p class="text-[11px] text-slate-500" id="subModalSubtitle">جاري البحث في OpenSubtitles...</p>
                 </div>
             </div>
-            <button onclick="closeSubModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-white transition-all flex items-center justify-center text-sm">
-                <i class="fas fa-times"></i>
-            </button>
+            <button onclick="closeSubModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center text-sm"><i class="fas fa-times"></i></button>
         </div>
-        <div class="sub-modal-body" id="subModalBody">
-            <div class="sub-loader">
-                <div class="sub-spinner"></div>
-                <p class="text-slate-500 text-sm animate-pulse">جاري البحث عن الترجمة...</p>
-            </div>
-        </div>
+        <div class="sub-modal-body" id="subModalBody"></div>
     </div>
 </div>
 
-<div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl shadow-emerald-500/20 hidden items-center gap-3 z-50 font-bold transition-all duration-300">
-    <i class="fas fa-check-circle text-xl"></i>
-    <span id="toastMsg">تم النسخ بنجاح!</span>
+<div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl hidden items-center gap-3 z-50 font-bold transition-all duration-300">
+    <i class="fas fa-check-circle text-xl"></i><span id="toastMsg">تم النسخ بنجاح!</span>
 </div>
 
 <script>
@@ -217,6 +212,7 @@ let allResults = [];
 let currentFilter = 'all';
 let currentSearchQuery = '';
 
+// رابط الـ Worker المطور الخاص بك
 const PRIVATE_PROXY = 'https://my-cors-proxy.karimslimany.workers.dev/?url=';
 
 function sanitizeQuery(q) {
@@ -238,19 +234,17 @@ function relevanceScore(resultName, query) {
         if (cleanName.includes(word)) matchedWords++;
     });
 
-    const matchRatio = matchedWords / queryWords.length;
-    const startsWithFirst = cleanName.startsWith(queryWords[0]) ? 15 : 0;
-    return Math.round((matchRatio * 80) + startsWithFirst);
+    return Math.round((matchedWords / queryWords.length) * 80 + (cleanName.startsWith(queryWords[0]) ? 15 : 0));
 }
 
 const MIN_RELEVANCE_THRESHOLD = 35;
 
 function detectCodec(name) {
     const lower = name.toLowerCase();
-    if (lower.includes('av1')) return { codec: 'AV1', priority: 1, class: 'codec-badge-av1 text-white shadow-sm', icon: 'fa-crown' };
-    if (lower.includes('x265') || lower.includes('hevc') || lower.includes('h265') || lower.includes('h.265')) return { codec: 'x265/HEVC', priority: 2, class: 'codec-badge-x265 text-white shadow-sm', icon: 'fa-microchip' };
-    if (lower.includes('x264') || lower.includes('h264') || lower.includes('h.264') || lower.includes('avc')) return { codec: 'x264/AVC', priority: 3, class: 'codec-badge-x264 text-white shadow-sm', icon: 'fa-video' };
-    return { codec: 'صيغ أخرى', priority: 4, class: 'codec-badge-other text-white shadow-sm', icon: 'fa-film' };
+    if (lower.includes('av1')) return { codec: 'AV1', priority: 1, class: 'codec-badge-av1 text-white', icon: 'fa-crown' };
+    if (lower.includes('x265') || lower.includes('hevc') || lower.includes('h265')) return { codec: 'x265/HEVC', priority: 2, class: 'codec-badge-x265 text-white', icon: 'fa-microchip' };
+    if (lower.includes('x264') || lower.includes('h264') || lower.includes('avc')) return { codec: 'x264/AVC', priority: 3, class: 'codec-badge-x264 text-white', icon: 'fa-video' };
+    return { codec: 'صيغ أخرى', priority: 4, class: 'codec-badge-other text-white', icon: 'fa-film' };
 }
 
 function detectQuality(name) {
@@ -258,8 +252,7 @@ function detectQuality(name) {
     if (lower.includes('2160') || lower.includes('4k') || lower.includes('uhd')) return { quality: '4K Ultra HD', priority: 1, class: 'quality-4k border' };
     if (lower.includes('1080')) return { quality: '1080p FHD', priority: 2, class: 'quality-1080 border' };
     if (lower.includes('720')) return { quality: '720p HD', priority: 3, class: 'quality-720 border' };
-    if (lower.includes('480')) return { quality: '480p SD', priority: 4, class: 'text-slate-400 border border-slate-600 bg-slate-800' };
-    return { quality: 'غير محددة', priority: 5, class: 'text-slate-500 border border-slate-700 bg-slate-800/50' };
+    return { quality: 'غير محددة', priority: 4, class: 'text-slate-500 border border-slate-700 bg-slate-800/50' };
 }
 
 function formatBytes(bytes) {
@@ -275,7 +268,20 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ===== نظام الترجمة المدمج =====
+// ===== نظام جلب البيانات الموحد والذكي عبر الـ Worker الخاص بك =====
+async function smartFetch(url, type = 'json') {
+    const proxied = `${PRIVATE_PROXY}${encodeURIComponent(url)}`;
+    try {
+        const res = await fetch(proxied, { cache: 'no-store' });
+        if (res.ok) {
+            const text = await res.text();
+            return type === 'json' ? JSON.parse(text) : text;
+        }
+    } catch (e) {}
+    throw new Error('فشل الاستجابة للطلب');
+}
+
+// ===== أدوات جلب الترجمات المدمجة عبر البروكسي =====
 const OSUB_API_KEY = 'ASWUGwmKGozuQJ82kJXjRVjhMgIeph1t';
 const OSUB_API_BASE = 'https://api.opensubtitles.com/api/v1';
 const subtitleCache = {};
@@ -287,8 +293,8 @@ async function openSubtitlePopup(imdbId, query) {
     const subtitleEl = document.getElementById('subModalSubtitle');
 
     titleEl.textContent = query ? `ترجمات: ${query}` : 'ترجمات عربية';
-    subtitleEl.textContent = 'جاري البحث في OpenSubtitles...';
-    body.innerHTML = `<div class="sub-loader"><div class="sub-spinner"></div><p class="text-slate-500 text-sm animate-pulse">جاري البحث عن الترجمة...</p></div>`;
+    subtitleEl.textContent = 'جاري البحث...';
+    body.innerHTML = `<div class="sub-loader"><div class="sub-spinner"></div></div>`;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
@@ -300,18 +306,10 @@ async function openSubtitlePopup(imdbId, query) {
             results = subtitleCache[cacheKey];
         } else {
             let searchUrl = `${OSUB_API_BASE}/subtitles?languages=ar&order_by=download_count&order_direction=desc`;
-            if (imdbId) {
-                searchUrl += `&imdb_id=${parseInt(imdbId.replace(/^tt/, ''), 10)}`;
-            } else {
-                searchUrl += `&query=${encodeURIComponent(query)}`;
-            }
+            if (imdbId) searchUrl += `&imdb_id=${parseInt(imdbId.replace(/^tt/, ''), 10)}`;
+            else searchUrl += `&query=${encodeURIComponent(query)}`;
 
-            const response = await fetch(`${PRIVATE_PROXY}${encodeURIComponent(searchUrl)}`, {
-                headers: { 'Api-Key': OSUB_API_KEY, 'Content-Type': 'application/json' }
-            });
-            if (!response.ok) throw new Error('فشل الاتصال بـ OpenSubtitles API');
-
-            const data = await response.json();
+            const data = await smartFetch(searchUrl, 'json');
             results = (data.data || []).slice(0, 20);
             subtitleCache[cacheKey] = results;
         }
@@ -319,83 +317,48 @@ async function openSubtitlePopup(imdbId, query) {
         subtitleEl.textContent = results.length > 0 ? `وُجد ${results.length} ترجمة عربية` : 'لم يتم العثور على ترجمة عربية';
 
         if (results.length === 0) {
-            const fallbackUrl = imdbId ? `https://www.opensubtitles.org/ar/search/sublanguageid-ara/imdbid-${imdbId.replace(/^tt/, '')}` : `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query || '')}`;
-            body.innerHTML = `
-                <div class="sub-empty">
-                    <i class="far fa-frown text-4xl mb-4 text-slate-600"></i>
-                    <p class="text-slate-400 font-bold mb-2">لا توجد ترجمات عربية متاحة</p>
-                    <a href="${fallbackUrl}" target="_blank" class="inline-flex items-center gap-2 btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-bold"><i class="fas fa-external-link-alt"></i> فتح OpenSubtitles</a>
-                </div>`;
+            body.innerHTML = `<div class="sub-empty"><p class="text-slate-400 font-bold">لا توجد ترجمات عربية مطابقة.</p></div>`;
             return;
         }
 
         body.innerHTML = results.map((sub) => {
             const attr = sub.attributes || {};
             const release = attr.release || attr.files?.[0]?.file_name || 'ترجمة عربية';
-            const dlCount = attr.download_count || 0;
-            const rating = attr.ratings ? parseFloat(attr.ratings).toFixed(1) : null;
-            const uploader = attr.uploader?.name || 'مجهول';
-            const fileId = attr.files?.[0]?.file_id;
-            const starsCount = rating ? Math.round(parseFloat(rating) / 2) : 0;
-            const stars = rating ? '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount) : '';
-
             return `
             <div class="sub-item">
                 <div class="sub-item-info">
                     <div class="sub-item-name" title="${release}">${release}</div>
-                    <div class="sub-item-meta">
-                        <span><i class="fas fa-download text-indigo-400 ml-1"></i>${dlCount.toLocaleString()}</span>
-                        ${rating ? `<span class="sub-rating-stars" title="التقييم: ${rating}/10">${stars}</span>` : ''}
-                        <span><i class="fas fa-user text-slate-600 ml-1"></i>${uploader}</span>
-                    </div>
+                    <div class="sub-item-meta"><span><i class="fas fa-download text-indigo-400 ml-1"></i>${(attr.download_count || 0).toLocaleString()}</span></div>
                 </div>
-                ${fileId ? `<button class="sub-dl-btn" onclick="downloadSubtitle(${fileId}, '${release.replace(/'/g,"\\'")}', this)"><i class="fas fa-download"></i> تحميل</button>` : `<span class="text-slate-600 text-xs">غير متاح</span>`}
+                ${attr.files?.[0]?.file_id ? `<button class="sub-dl-btn" onclick="downloadSubtitle(${attr.files[0].file_id}, '${release.replace(/'/g,"\\'")}', this)"><i class="fas fa-download"></i> تحميل</button>` : ''}
             </div>`;
         }).join('');
     } catch (err) {
-        subtitleEl.textContent = 'حدث خطأ في الاتصال';
-        body.innerHTML = `<div class="sub-empty"><p class="text-slate-400 font-bold mb-2">تعذّر الاتصال بـ OpenSubtitles API</p></div>`;
+        body.innerHTML = `<div class="sub-empty"><p class="text-red-400">فشل تحميل قائمة الترجمة.</p></div>`;
     }
 }
 
 async function downloadSubtitle(fileId, fileName, btnEl) {
     btnEl.disabled = true;
-    btnEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري...';
     try {
-        const response = await fetch(`${PRIVATE_PROXY}${encodeURIComponent(`${OSUB_API_BASE}/download`)}`, {
-            method: 'POST',
-            headers: { 'Api-Key': OSUB_API_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file_id: fileId })
-        });
-        if (!response.ok) throw new Error('فشل الحصول على رابط التحميل');
-        const data = await response.json();
-
+        const data = await smartFetch(`${OSUB_API_BASE}/download`, 'json');
         if (data.link) {
             const fileRes = await fetch(`${PRIVATE_PROXY}${encodeURIComponent(data.link)}`);
             const blob = await fileRes.blob();
             const blobUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = blobUrl;
-            a.download = fileName.endsWith('.srt') || fileName.endsWith('.ass') ? fileName : fileName + '.srt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            btnEl.innerHTML = '<i class="fas fa-check"></i> تم!';
-            btnEl.style.background = 'linear-gradient(135deg,#059669,#10b981)';
-            showToast('✅ تم تحميل الترجمة بنجاح!');
+            a.download = fileName.endsWith('.srt') ? fileName : fileName + '.srt';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            showToast('✅ تم تحميل ملف الترجمة بنجاح!');
         }
-    } catch (err) {
-        btnEl.disabled = false;
-        btnEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ';
-    }
+    } catch (err) { showToast('❌ تعذر تحميل الملف.'); }
+    btnEl.disabled = false;
 }
 
-function closeSubModal(event) {
-    if (event && event.target !== document.getElementById('subtitleModal')) return;
-    document.getElementById('subtitleModal').classList.remove('active');
-    document.body.style.overflow = '';
-}
+function closeSubModal() { document.getElementById('subtitleModal').classList.remove('active'); document.body.style.overflow = ''; }
 
+// ===== إثراء بيانات الـ IMDb المعجل للترجمات المباشرة =====
 const imdbCache = {};
 async function getIMDbID(title, year) {
     const cacheKey = title.toLowerCase().trim() + (year ? '_' + year : '');
@@ -403,11 +366,10 @@ async function getIMDbID(title, year) {
     try {
         let url = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}&type=movie`;
         if (year) url += `&y=${year}`;
-        const d1 = await smartFetch(url, 'json');
-        if (d1?.Response === 'True' && d1.imdbID) { imdbCache[cacheKey] = d1.imdbID; return d1.imdbID; }
+        const d = await smartFetch(url, 'json');
+        if (d?.Response === 'True' && d.imdbID) { imdbCache[cacheKey] = d.imdbID; return d.imdbID; }
     } catch (e) {}
-    imdbCache[cacheKey] = null;
-    return null;
+    imdbCache[cacheKey] = null; return null;
 }
 
 async function enrichWithIMDb(items) {
@@ -420,12 +382,11 @@ async function enrichWithIMDb(items) {
         if (!uniqueTitles.has(cacheKey)) uniqueTitles.set(cacheKey, { title, year, indices: [] });
         uniqueTitles.get(cacheKey).indices.push(idx);
     });
-
     const entries = Array.from(uniqueTitles.entries());
     for (let i = 0; i < entries.length; i += 3) {
         const batch = entries.slice(i, i + 3);
         await Promise.all(batch.map(async ([cacheKey, { title, year, indices }]) => {
-            try { const imdbId = await getIMDbID(title, year); if (imdbId) { indices.forEach(idx => { items[idx].imdb = imdbId; }); } } catch (e) {}
+            try { const imdbId = await getIMDbID(title, year); if (imdbId) indices.forEach(idx => { items[idx].imdb = imdbId; }); } catch (e) {}
         }));
     }
 }
@@ -435,69 +396,43 @@ function extractTitleAndYear(torrentName) {
     const yearMatch = name.match(/\b(19\d{2}|20\d{2})\b/);
     const year = yearMatch ? yearMatch[1] : null;
     let title = name;
-    if (yearMatch) { title = name.substring(0, yearMatch.index).trim(); } 
-    else {
-        const cutMatch = name.match(/\b(1080p|720p|2160p|4k|uhd|bluray|bdrip|webrip|web-dl|hdtv|dvdrip|x264|x265|hevc|avc|av1|h264|h265|hdr|sdr|remux)\b/i);
-        if (cutMatch) title = name.substring(0, cutMatch.index).trim();
-    }
+    if (yearMatch) title = name.substring(0, yearMatch.index).trim();
     return { title: title.trim(), year };
 }
 
-async function smartFetch(url, type = 'json') {
-    const proxied = `${PRIVATE_PROXY}${encodeURIComponent(url)}`;
-    try {
-        const res = await fetch(proxied, { cache: 'no-store' });
-        if(res.ok) {
-            const text = await res.text();
-            return type === 'json' ? JSON.parse(text) : text;
-        }
-    } catch(e) {}
-    throw new Error('فشل جلب البيانات');
-}
-
 function showToast(msg) {
-    const toast = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    toast.classList.remove('hidden', 'translate-y-10', 'opacity-0');
-    toast.classList.add('flex', 'translate-y-0', 'opacity-100');
-    setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.classList.add('hidden'), 300); }, 2500);
+    const toast = document.getElementById('toast'); document.getElementById('toastMsg').textContent = msg;
+    toast.classList.remove('hidden'); toast.classList.add('flex');
+    setTimeout(() => { toast.classList.add('hidden'); }, 2500);
 }
 
 function copyMagnet(link, btnElement) {
     navigator.clipboard.writeText(link).then(() => {
         showToast('تم نسخ الرابط بنجاح!');
-        const originalHtml = btnElement.innerHTML;
-        btnElement.classList.remove('btn-primary');
-        btnElement.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
-        btnElement.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
-        setTimeout(() => { btnElement.classList.remove('bg-emerald-500', 'hover:bg-emerald-600'); btnElement.classList.add('btn-primary'); btnElement.innerHTML = originalHtml; }, 2000);
+        const oldHtml = btnElement.innerHTML; btnElement.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => { btnElement.innerHTML = oldHtml; }, 2000);
     });
 }
 
 function setStatus(msg, type = 'info') {
-    const el = document.getElementById('statusMsg');
-    el.className = "max-w-3xl mx-auto mb-8 rounded-xl p-4 text-sm font-bold border shadow-sm";
+    const el = document.getElementById('statusMsg'); el.className = "max-w-3xl mx-auto mb-8 rounded-xl p-4 text-sm font-bold border";
     if (type === 'error') el.classList.add('bg-red-500/10', 'border-red-500/20', 'text-red-400');
     else el.classList.add('bg-blue-500/10', 'border-blue-500/20', 'text-blue-400');
     el.innerHTML = msg; el.classList.remove('hidden');
 }
 
-function hideStatus() { document.getElementById('statusMsg').classList.add('hidden'); }
-
 function setProgress(text, percent) {
-    const area = document.getElementById('progressArea');
-    area.classList.remove('hidden');
-    document.getElementById('progressText').innerHTML = `<i class="fas fa-circle-notch fa-spin text-indigo-400 mr-2"></i> ${text}`;
-    document.getElementById('progressPercent').textContent = percent + '%';
+    document.getElementById('progressArea').classList.remove('hidden');
+    document.getElementById('progressText').innerHTML = text;
     document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressPercent').textContent = percent + '%';
 }
-function hideProgress() { document.getElementById('progressArea').classList.add('hidden'); }
 
 function setFilter(filter) {
     currentFilter = filter;
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.filter === filter) { btn.classList.add('bg-indigo-500/20', 'text-indigo-300', 'border-indigo-500/30'); } 
-        else { btn.classList.remove('bg-indigo-500/20', 'text-indigo-300', 'border-indigo-500/30'); btn.classList.add('bg-slate-800'); }
+        if (btn.dataset.filter === filter) btn.classList.add('bg-indigo-500/20', 'text-indigo-300');
+        else btn.classList.remove('bg-indigo-500/20', 'text-indigo-300');
     });
     renderResults();
 }
@@ -505,15 +440,12 @@ function setFilter(filter) {
 function renderResults() {
     const grid = document.getElementById('resultsGrid');
     const sortType = document.getElementById('sortSelect').value;
-
     let filtered = allResults;
+
     if (currentFilter !== 'all') {
         filtered = allResults.filter(r => {
             const codec = detectCodec(r.name).codec.toLowerCase();
-            if (currentFilter === 'av1') return codec.includes('av1');
-            if (currentFilter === 'x265') return codec.includes('x265') || codec.includes('hevc');
-            if (currentFilter === 'x264') return codec.includes('x264') || codec.includes('avc');
-            return true;
+            return codec.includes(currentFilter);
         });
     }
 
@@ -521,21 +453,15 @@ function renderResults() {
         const relA = a._relevance ?? relevanceScore(a.name, currentSearchQuery);
         const relB = b._relevance ?? relevanceScore(b.name, currentSearchQuery);
         if (sortType === 'relevance') return relB - relA || (b.seeds || 0) - (a.seeds || 0);
-        if (sortType === 'codec') {
-            const tierA = relA >= 90 ? 0 : 1; const tierB = relB >= 90 ? 0 : 1;
-            if (tierA !== tierB) return tierA - tierB;
-            const pa = detectCodec(a.name).priority; const pb = detectCodec(b.name).priority;
-            if (pa !== pb) return pa - pb;
-            return detectQuality(a.name).priority - detectQuality(b.name).priority || (b.seeds || 0) - (a.seeds || 0);
-        }
-        if (sortType === 'quality') return detectQuality(a.name).priority - detectQuality(b.name).priority || detectCodec(a.name).priority - detectCodec(b.name).priority;
+        if (sortType === 'codec') return detectCodec(a.name).priority - detectCodec(b.name).priority || (b.seeds || 0) - (a.seeds || 0);
+        if (sortType === 'quality') return detectQuality(a.name).priority - detectQuality(b.name).priority || (b.seeds || 0) - (a.seeds || 0);
         if (sortType === 'size') return (b.size || 0) - (a.size || 0);
         if (sortType === 'seeds') return (b.seeds || 0) - (a.seeds || 0);
         return 0;
     });
 
     if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-500 bg-card rounded-3xl border border-slate-700"><p class="text-xl font-bold text-slate-400">لم يتم العثور على نتائج تطابق الفلتر الحالي</p></div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 bg-card rounded-3xl border border-slate-700">لا توجد نتائج مطابقة للفرز حالياً.</div>`;
         return;
     }
 
@@ -549,9 +475,9 @@ function renderResults() {
                     <span class="${codec.class} text-[11px] px-2.5 py-1 rounded-md font-extrabold flex items-center gap-1.5 uppercase"><i class="fas ${codec.icon}"></i> ${codec.codec}</span>
                     <span class="${quality.class} text-[11px] font-bold px-2 py-1 rounded-md">${quality.quality}</span>
                 </div>
-                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700 font-medium whitespace-nowrap"><i class="fas fa-database mr-1"></i> ${escapeHtml(item.source)}</span>
+                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700 font-medium whitespace-nowrap">${escapeHtml(item.source)}</span>
             </div>
-            <h3 class="font-bold text-base md:text-lg mb-4 line-clamp-3 leading-snug break-words text-slate-200" dir="ltr">${escapeHtml(item.name)}</h3>
+            <h3 class="font-bold text-base md:text-lg mb-4 line-clamp-3 text-slate-200" dir="ltr">${escapeHtml(item.name)}</h3>
             <div class="flex items-center justify-between bg-slate-900/50 p-3 rounded-xl border border-slate-800 mb-4">
                 <div class="flex items-center gap-2 text-slate-400 text-sm font-medium"><i class="fas fa-hdd text-slate-500"></i> <span dir="ltr">${formatBytes(item.size)}</span></div>
                 <div class="flex gap-3 text-sm font-bold">
@@ -561,28 +487,26 @@ function renderResults() {
             <div class="flex gap-2 mt-auto pt-2">
                 <a href="${escapeHtml(item.magnet)}" class="btn-primary flex-1 py-2.5 rounded-xl text-white flex items-center justify-center gap-2 text-sm font-bold"><i class="fas fa-external-link-alt"></i> فتح</a>
                 <button onclick="openSubtitlePopup('${escapeHtml(item.imdb || "")}', '${escapeHtml(item.name)}')" class="bg-slate-700 hover:bg-indigo-600 text-white flex-1 py-2.5 rounded-xl text-sm font-bold"><i class="far fa-closed-captioning"></i> ترجمة</button>
-                <button onclick="copyMagnet('${escapeHtml(item.magnet)}', this)" class="w-12 bg-slate-700 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center shadow-sm"><i class="fas fa-link"></i></button>
+                <button onclick="copyMagnet('${escapeHtml(item.magnet)}', this)" class="w-12 bg-slate-700 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center"><i class="fas fa-link"></i></button>
             </div>
         </div>`;
     }).join('');
 }
 
-// 1. محرك القراصنة (TPB)
+// ===== محركات البحث الستة الفعالة والقوية بنظام الـ JSON والـ RSS المفتوح =====
+
 async function searchTPB(query) {
     try {
         const data = await smartFetch('https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200', 'json');
         if (Array.isArray(data)) {
             return data.filter(item => item.id !== '0' && item.name).slice(0, 30).map(item => ({
-                name: item.name,
-                magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
-                size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
+                name: item.name, magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
+                size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, source: 'The Pirate Bay'
             }));
         }
-    } catch (e) {}
-    return [];
+    } catch (e) {} return [];
 }
 
-// 2. محرك كنابين المطور (Knaben POST API)
 async function searchKnaben(query) {
     try {
         const requestBody = JSON.stringify({ search_field: 'title', query: query, order_by: 'seeders', order_direction: 'desc', from: 0, size: 40, hide_unsafe: true, hide_xxx: true });
@@ -594,36 +518,70 @@ async function searchKnaben(query) {
             if (data && Array.isArray(data.hits)) {
                 return data.hits.map(hit => ({
                     name: hit.title || 'Unknown', magnet: hit.magnetUrl || hit.link || '#',
-                    size: parseInt(hit.bytes) || 0, seeds: parseInt(hit.seeders) || 0, peers: parseInt(hit.peers) || 0, source: 'Knaben'
+                    size: parseInt(hit.bytes) || 0, seeds: parseInt(hit.seeders) || 0, source: 'Knaben'
                 })).filter(r => r.magnet !== '#');
             }
         }
-    } catch (e) {}
-    return [];
+    } catch (e) {} return [];
 }
 
-// 3. المحرك الجديد المضاف: SolidTorrents (JSON API العملاق والمستقر)
 async function searchSolidTorrents(query) {
     try {
         const data = await smartFetch('https://solidtorrents.net/api/v1/search?q=' + encodeURIComponent(query) + '&category=all', 'json');
         if (data && Array.isArray(data.results)) {
             return data.results.map(item => ({
-                name: item.title,
-                magnet: item.magnet,
-                size: parseInt(item.size) || 0,
-                seeds: parseInt(item.seeds) || 0,
-                peers: parseInt(item.leechers) || 0,
-                source: 'SolidTorrents'
+                name: item.title, magnet: item.magnet, size: parseInt(item.size) || 0, seeds: parseInt(item.seeds) || 0, source: 'SolidTorrents'
             }));
         }
-    } catch (e) {}
-    return [];
+    } catch (e) {} return [];
 }
 
+async function searchAniDex(query) {
+    try {
+        const data = await smartFetch('https://anidex.info/api/?q=' + encodeURIComponent(query), 'json');
+        if (data) {
+            const items = Array.isArray(data) ? data : Object.values(data);
+            return items.map(item => ({
+                name: item.name || 'Unknown', magnet: item.magnet || '#', size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, source: 'AniDex Anime'
+            })).filter(r => r.magnet.startsWith('magnet:'));
+        }
+    } catch (e) {} return [];
+}
+
+async function searchBitSearch(query) {
+    try {
+        const text = await smartFetch('https://bitsearch.to/rss?q=' + encodeURIComponent(query), 'text');
+        const xml = new DOMParser().parseFromString(text, 'text/xml');
+        return Array.from(xml.querySelectorAll('item')).map(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const link = item.querySelector('link')?.textContent || '#';
+            let magnet = link.startsWith('magnet:') ? link : '#';
+            if (magnet === '#') {
+                const magnetMatch = (item.querySelector('description')?.textContent || '').match(/magnet:\?[^\s"'<]*/i);
+                if (magnetMatch) magnet = magnetMatch[0];
+            }
+            return { name: title, magnet: magnet, size: parseInt(item.querySelector('enclosure')?.getAttribute('length')) || 0, seeds: 0, source: 'BitSearch Feed' };
+        }).filter(r => r.magnet.startsWith('magnet:'));
+    } catch (e) {} return [];
+}
+
+async function searchTokyoToshokan(query) {
+    try {
+        const text = await smartFetch('https://www.tokyotoshokan.info/rss.php?filter=0&search=' + encodeURIComponent(query), 'text');
+        const xml = new DOMParser().parseFromString(text, 'text/xml');
+        return Array.from(xml.querySelectorAll('item')).map(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const link = item.querySelector('link')?.textContent || '#';
+            return { name: title, magnet: link.startsWith('magnet:') ? link : '#', size: parseInt(item.querySelector('enclosure')?.getAttribute('length')) || 0, seeds: 0, source: 'Tokyo Toshokan' };
+        }).filter(r => r.magnet.startsWith('magnet:'));
+    } catch (e) {} return [];
+}
+
+// ===== دالة التحكم الرئيسية في البث والدمج التدفّقي للنتائج =====
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
     const cleanQuery = sanitizeQuery(rawQuery);
-    if (!cleanQuery) { setStatus('<i class="fas fa-info-circle mr-2"></i> يرجى إدخال اسم العمل للبدء.', 'info'); return; }
+    if (!cleanQuery) { setStatus('يرجى إدخال اسم العمل للبدء.', 'info'); return; }
 
     currentSearchQuery = cleanQuery;
     document.getElementById('loading').classList.remove('hidden');
@@ -632,16 +590,17 @@ async function searchTorrents() {
     hideStatus(); allResults = [];
 
     const btn = document.getElementById('searchBtn'); const icon = document.getElementById('searchIcon'); const txt = document.getElementById('searchText');
-    btn.disabled = true; btn.classList.add('opacity-80', 'cursor-not-allowed');
-    icon.className = 'fas fa-circle-notch fa-spin text-sm'; txt.textContent = 'جاري المسح';
+    btn.disabled = true; icon.className = 'fas fa-circle-notch fa-spin text-sm'; txt.textContent = 'جاري البحث';
 
-    setProgress('جاري فحص قواعد البيانات الفعالة واستخراج الروابط التدفُّقية...', 10);
+    setProgress('جاري إنشاء قنوات الربط وسحب الروابط التدفّقية التلقائية...', 5);
 
-    // حصر المحركات في الثلاثة الفعالة والمستقرة بنسبة 100%
     const engines = [
-        { name: 'Knaben', func: searchKnaben },
+        { name: 'Knaben (Meta)', func: searchKnaben },
         { name: 'The Pirate Bay', func: searchTPB },
-        { name: 'SolidTorrents', func: searchSolidTorrents }
+        { name: 'SolidTorrents', func: searchSolidTorrents },
+        { name: 'BitSearch', func: searchBitSearch },
+        { name: 'AniDex (Anime)', func: searchAniDex },
+        { name: 'Tokyo Toshokan', func: searchTokyoToshokan }
     ];
 
     let completedRequests = 0;
@@ -665,19 +624,17 @@ async function searchTorrents() {
             } catch (err) {} 
             finally {
                 completedRequests++;
-                setProgress(`تم تمشيط قواعد بيانات ${engine.name}... (${allResults.length} نتيجة نظيفة حتى الآن)`, Math.round((completedRequests / engines.length) * 100));
+                setProgress(`تم مسح قنوات ${engine.name}... وجدنا (${allResults.length}) رابطاً مستقراً حتى الآن`, Math.round((completedRequests / engines.length) * 100));
             }
         });
 
         await Promise.all(enginePromises);
-        setProgress('اكتمل البحث الذكي بنجاح!', 100);
-        if (allResults.length === 0) setStatus('لم نجد نتائج تطابق بحثك بدقة. حاول مراجعة الحروف أو الكلمات الدليليلة.', 'error');
-    } catch (error) {
-        setStatus('حدث خطأ غير متوقع أثناء معالجة البيانات.', 'error');
-    } finally {
+        document.getElementById('progressArea').classList.add('hidden');
+        if (allResults.length === 0) setStatus('لم نتمكن من جلب نتائج دقيقة. جرب تعديل كلمات البحث.', 'error');
+    } catch (error) { setStatus('حدث خطأ غير متوقع.', 'error'); }
+    finally {
         document.getElementById('loading').classList.add('hidden');
-        setTimeout(hideProgress, 800); btn.disabled = false; btn.classList.remove('opacity-80', 'cursor-not-allowed');
-        icon.className = 'fas fa-arrow-left text-sm'; txt.textContent = 'بحث الآن';
+        btn.disabled = false; icon.className = 'fas fa-arrow-left text-sm'; txt.textContent = 'بحث الآن';
     }
 }
 
