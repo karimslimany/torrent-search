@@ -46,7 +46,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 .badge-pulse { animation: pulse-soft 2s infinite; }
 @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-/* ===== نافذة الترجمة المدمجة ===== */
+/* ===== نافذة الترجمة ===== */
 #subtitleModal { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); }
 #subtitleModal.active { display:flex; }
 .sub-modal-box { background:#0f172a; border:1px solid rgba(99,102,241,0.3); border-radius:1.5rem; width:min(700px, 95vw); max-height:85vh; display:flex; flex-direction:column; box-shadow:0 30px 60px -10px rgba(0,0,0,0.8), 0 0 0 1px rgba(99,102,241,0.1); overflow:hidden; }
@@ -124,7 +124,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 
     <div id="progressArea" class="hidden max-w-3xl mx-auto mb-8 bg-card border border-slate-700 rounded-2xl p-4 shadow-lg">
         <div class="flex justify-between text-xs font-medium text-slate-300 mb-2">
-            <span id="progressText" class="flex items-center gap-2"><i class="fas fa-circle-notch fa-spin text-indigo-400"></i> جاري إرسال طلبات الاستعلام...</span>
+            <span id="progressText" class="flex items-center gap-2"><i class="fas fa-circle-notch fa-spin text-indigo-400"></i> جاري الاتصال بمصادر البيانات...</span>
             <span id="progressPercent" class="text-indigo-400 font-bold">0%</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width: 0%"></div></div>
@@ -153,7 +153,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 
     <div id="loading" class="hidden flex flex-col items-center justify-center py-24">
         <div class="loader mb-6 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
-        <p class="text-slate-400 font-medium tracking-wide animate-pulse" id="loadingText">جاري جلب النتائج المتاحة وترتيبها...</p>
+        <p class="text-slate-400 font-medium tracking-wide animate-pulse">جاري جلب النتائج الأولية...</p>
     </div>
 
     <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -260,6 +260,7 @@ function formatBytes(bytes) {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' <span class="text-[10px]">' + sizes[i] + '</span>';
 }
 
+// دالة منع حقن الأكواد الخبيثة
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = String(text ?? '');
@@ -278,7 +279,7 @@ async function smartFetch(url, type = 'json') {
     throw new Error('فشل الاستجابة');
 }
 
-// ===== نظام جلب الترجمة المدمج ومحاذاة النصوص =====
+// ===== أدوات جلب الترجمة =====
 const OSUB_API_KEY = 'ASWUGwmKGozuQJ82kJXjRVjhMgIeph1t';
 const OSUB_API_BASE = 'https://api.opensubtitles.com/api/v1';
 const subtitleCache = {};
@@ -489,7 +490,7 @@ function renderResults() {
     }).join('');
 }
 
-// ===== محركات البحث المحدثة والمنظفة تلقائياً =====
+// ===== محركات الاستعلام =====
 
 async function searchTPB(query) {
     try {
@@ -573,22 +574,30 @@ async function searchTokyoToshokan(query) {
     } catch (e) {} return [];
 }
 
-// ===== دالة البحث والتحكم المعززة بـ Race Timeout لإنهاء البطء ثانياً بثانية =====
+// ===== دالة التحكم الرئيسية المدعومة بالعرض اللحظي والتدريجي المباشر =====
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
     const cleanQuery = sanitizeQuery(rawQuery);
     if (!cleanQuery) { setStatus('يرجى إدخال كلمة البحث أولاً.', 'info'); return; }
 
     currentSearchQuery = cleanQuery;
+    
+    // تفعيل المؤشرات الأولية
     document.getElementById('loading').classList.remove('hidden');
     document.getElementById('statsBar').classList.add('hidden');
     document.getElementById('resultsGrid').innerHTML = '';
-    hideStatus(); allResults = [];
+    hideStatus(); 
+    allResults = [];
 
-    const btn = document.getElementById('searchBtn'); const icon = document.getElementById('searchIcon'); const txt = document.getElementById('searchText');
-    btn.disabled = true; icon.className = 'fas fa-circle-notch fa-spin text-sm'; txt.textContent = 'جاري البحث';
+    const btn = document.getElementById('searchBtn'); 
+    const icon = document.getElementById('searchIcon'); 
+    const txt = document.getElementById('searchText');
+    
+    btn.disabled = true; 
+    icon.className = 'fas fa-circle-notch fa-spin text-sm'; 
+    txt.textContent = 'جاري البحث';
 
-    setProgress('جاري الاتصال بمصادر البيانات المفتوحة...', 5);
+    setProgress('<i class="fas fa-wifi text-indigo-400 animate-pulse"></i> جاري إرسال طلبات الاستعلام الموازية...', 5);
 
     const engines = [
         { name: 'Knaben API', func: searchKnaben },
@@ -602,13 +611,12 @@ async function searchTorrents() {
     let completedRequests = 0;
     document.getElementById('sortSelect').value = 'codec';
 
-    // مهلة زمنية صارمة تضمن عدم تعليق الواجهة لأكثر من 3.5 ثوانٍ مهما حدث للخوادم
-    const ENGINE_TIMEOUT_MS = 3500; 
+    // مهلة زمنية مخفضة لسرعة تخطي الخوادم البطيئة
+    const ENGINE_TIMEOUT_MS = 2500; 
 
     try {
         const enginePromises = engines.map(async (engine) => {
             try {
-                // سباق فوري بين دالة المحرك والمهلة الزمنية الصارمة
                 const timeoutPromise = new Promise(resolve => setTimeout(() => resolve([]), ENGINE_TIMEOUT_MS));
                 const res = await Promise.race([engine.func(cleanQuery), timeoutPromise]);
 
@@ -617,26 +625,42 @@ async function searchTorrents() {
                     return item._relevance >= MIN_RELEVANCE_THRESHOLD;
                 });
 
+                // العرض التدريجي الفوري: حقن النتائج وتحديث الواجهة بمجرد انتهاء المحرك الحالي
                 if (relevant.length > 0) {
                     allResults = allResults.concat(relevant);
+                    
+                    // إخفاء مؤشر التحميل الرئيسي فوراً بمجرد ظهور أول نتيجة فعالة لسرعة تفاعل المستخدم
+                    document.getElementById('loading').classList.add('hidden'); 
                     document.getElementById('statsBar').classList.remove('hidden');
-                    updateStatsBar(); renderResults();
+                    
+                    updateStatsBar(); 
+                    renderResults();
                     enrichWithIMDb(relevant).then(() => renderResults()).catch(() => {});
                 }
             } catch (err) {} 
             finally {
                 completedRequests++;
-                setProgress(`جاري فحص الاستجابة من ${engine.name}... (النتائج الحالية: ${allResults.length})`, Math.round((completedRequests / engines.length) * 100));
+                const percentage = Math.round((completedRequests / engines.length) * 100);
+                setProgress(`<i class="fas fa-check-circle text-emerald-400"></i> استجابة ${engine.name} (${allResults.length} نتيجة)`, percentage);
             }
         });
 
         await Promise.all(enginePromises);
-        document.getElementById('progressArea').classList.add('hidden');
-        if (allResults.length === 0) setStatus('لم يتم العثور على نتائج تطابق معايير الاستعلام الدقيقة.', 'error');
-    } catch (error) { setStatus('حدث خطأ أثناء معالجة الطلب المجمع.', 'error'); }
-    finally {
+        
+        // إخفاء شريط التقدم تدريجياً بعد الاكتمال
+        setTimeout(() => { document.getElementById('progressArea').classList.add('hidden'); }, 800);
+        
+        if (allResults.length === 0) {
+            document.getElementById('loading').classList.add('hidden');
+            setStatus('لم يتم العثور على نتائج تطابق معايير الاستعلام.', 'error');
+        }
+    } catch (error) { 
+        setStatus('حدث خطأ أثناء معالجة البيانات.', 'error'); 
+    } finally {
         document.getElementById('loading').classList.add('hidden');
-        btn.disabled = false; icon.className = 'fas fa-arrow-left text-sm'; txt.textContent = 'بحث الآن';
+        btn.disabled = false; 
+        icon.className = 'fas fa-arrow-left text-sm'; 
+        txt.textContent = 'بحث الآن';
     }
 }
 
