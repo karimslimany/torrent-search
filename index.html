@@ -65,7 +65,6 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 .sub-loader { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem 0; gap:1rem; }
 .sub-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.05); border-top-color:#818cf8; border-radius:50%; animation:spin 1s linear infinite; }
 .sub-empty { text-align:center; padding:3rem 1rem; color:#64748b; }
-.sub-rating-stars { color:#f59e0b; letter-spacing:1px; }
 </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -82,7 +81,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
             </div>
         </div>
         <div class="hidden lg:flex flex-wrap items-center gap-4 text-xs font-medium text-slate-400">
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben (Meta)</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben API</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> The Pirate Bay</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> SolidTorrents</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> BitSearch</span>
@@ -96,7 +95,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
     <div class="text-center mb-12">
         <h2 class="text-3xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-sm">ابحث عن المحتوى بأفضل جودة</h2>
         <p class="text-slate-400 text-sm md:text-base mb-8 max-w-2xl mx-auto leading-relaxed">
-            محرك بحث فائق السرعة يعتمد على تجميع البيانات التدفّقية من أقوى خوادم التورنت والـ APIs المستقرة عالمياً.
+            محرك بحث متطور يقوم بالاستعلام المتزامن من قواعد البيانات المفتوحة، مع ترتيب تلقائي يضع صيغ الجيل الجديد (AV1 و x265) في الصدارة.
         </p>
 
         <div class="max-w-3xl mx-auto relative group">
@@ -105,7 +104,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                     <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                         <i class="fas fa-search text-slate-500"></i>
                     </div>
-                    <input type="text" id="searchInput" placeholder="ابحث بدقة (مثال: Inception أو Attack on Titan)..." 
+                    <input type="text" id="searchInput" placeholder="أدخل اسم العمل بدقة (مثال: Inception أو Attack on Titan)..." 
                         class="search-input w-full bg-card border border-slate-700 rounded-2xl pr-11 pl-4 py-4 text-lg outline-none text-white placeholder-slate-500 transition-all focus:border-indigo-500">
                 </div>
                 <button onclick="searchTorrents()" id="searchBtn" class="btn-primary px-8 py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 min-w-[120px]">
@@ -125,7 +124,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 
     <div id="progressArea" class="hidden max-w-3xl mx-auto mb-8 bg-card border border-slate-700 rounded-2xl p-4 shadow-lg">
         <div class="flex justify-between text-xs font-medium text-slate-300 mb-2">
-            <span id="progressText" class="flex items-center gap-2"><i class="fas fa-circle-notch fa-spin text-indigo-400"></i> جاري جلب البيانات...</span>
+            <span id="progressText" class="flex items-center gap-2"><i class="fas fa-circle-notch fa-spin text-indigo-400"></i> جاري إرسال طلبات الاستعلام...</span>
             <span id="progressPercent" class="text-indigo-400 font-bold">0%</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width: 0%"></div></div>
@@ -135,7 +134,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 
     <div id="statsBar" class="hidden mb-8 glass rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-700">
         <div class="flex items-center gap-4 text-sm flex-wrap justify-center">
-            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">النتائج:</span> <span id="totalResults" class="text-white font-bold">0</span></div>
+            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">إجمالي النتائج:</span> <span id="totalResults" class="text-white font-bold">0</span></div>
             <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">AV1:</span> <span id="av1Count" class="text-emerald-400 font-bold">0</span></div>
             <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">x265:</span> <span id="x265Count" class="text-blue-400 font-bold">0</span></div>
             <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">x264:</span> <span id="x264Count" class="text-amber-400 font-bold">0</span></div>
@@ -154,7 +153,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 
     <div id="loading" class="hidden flex flex-col items-center justify-center py-24">
         <div class="loader mb-6 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
-        <p class="text-slate-400 font-medium tracking-wide animate-pulse" id="loadingText">جاري مسح القنوات الآمنة والفرز التدفّقي...</p>
+        <p class="text-slate-400 font-medium tracking-wide animate-pulse" id="loadingText">جاري جلب النتائج المتاحة وترتيبها...</p>
     </div>
 
     <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -176,7 +175,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                 <h3 class="text-slate-300 font-bold">إخلاء مسؤولية قانوني</h3>
             </div>
             <p class="text-xs text-slate-500 max-w-3xl leading-relaxed">
-                موقع <strong>TorrentFinder</strong> هو مجرد أداة برمجية (محرك بحث) تقوم بجمع وفهرسة البيانات والروابط المتاحة بشكل عام على شبكة الإنترنت. نحن <strong>لا نستضيف، ولا نرفع، ولا نخزن</strong> أي ملفات تورنت أو مواد محمية بحقوق الطبع والنشر على خوادمنا. يتحمل المستخدم بمفرده المسؤولية القانونية والأخلاقية الكاملة عن كيفية استخدام الروابط المقدمة والامتثال لقوانين حقوق النشر في بلده.
+                موقع <strong>TorrentFinder</strong> هو محرك بحث مخصص لفهرسة البيانات المتاحة علناً على الويب. نحن لا نستضيف أو نخزن أي ملفات محمية بحقوق النشر على خوادمنا. يتحمل المستخدم المسؤولية الكاملة عن الامتثال للقوانين المحلية.
             </p>
             <div class="mt-6 text-[10px] text-slate-600 uppercase tracking-widest font-bold">
                 &copy; 2026 TorrentFinder Search Engine. All rights reserved.
@@ -193,8 +192,8 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                     <i class="far fa-closed-captioning text-indigo-400"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-white text-base" id="subModalTitle">ترجمات عربية</h3>
-                    <p class="text-[11px] text-slate-500" id="subModalSubtitle">جاري البحث في OpenSubtitles...</p>
+                    <h3 class="font-extrabold text-white text-base" id="subModalTitle">الترجمات العربية</h3>
+                    <p class="text-[11px] text-slate-500" id="subModalSubtitle">جاري استعلام ملفات الترجمة...</p>
                 </div>
             </div>
             <button onclick="closeSubModal()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center text-sm"><i class="fas fa-times"></i></button>
@@ -204,7 +203,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 </div>
 
 <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl hidden items-center gap-3 z-50 font-bold transition-all duration-300">
-    <i class="fas fa-check-circle text-xl"></i><span id="toastMsg">تم النسخ بنجاح!</span>
+    <i class="fas fa-check-circle text-xl"></i><span id="toastMsg">تم نسخ الرابط!</span>
 </div>
 
 <script>
@@ -212,7 +211,6 @@ let allResults = [];
 let currentFilter = 'all';
 let currentSearchQuery = '';
 
-// رابط الـ Worker المطور الخاص بك
 const PRIVATE_PROXY = 'https://my-cors-proxy.karimslimany.workers.dev/?url=';
 
 function sanitizeQuery(q) {
@@ -268,7 +266,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ===== نظام جلب البيانات الموحد والذكي عبر الـ Worker الخاص بك =====
 async function smartFetch(url, type = 'json') {
     const proxied = `${PRIVATE_PROXY}${encodeURIComponent(url)}`;
     try {
@@ -278,10 +275,10 @@ async function smartFetch(url, type = 'json') {
             return type === 'json' ? JSON.parse(text) : text;
         }
     } catch (e) {}
-    throw new Error('فشل الاستجابة للطلب');
+    throw new Error('فشل الاستجابة');
 }
 
-// ===== أدوات جلب الترجمات المدمجة عبر البروكسي =====
+// ===== نظام جلب الترجمة المدمج ومحاذاة النصوص =====
 const OSUB_API_KEY = 'ASWUGwmKGozuQJ82kJXjRVjhMgIeph1t';
 const OSUB_API_BASE = 'https://api.opensubtitles.com/api/v1';
 const subtitleCache = {};
@@ -292,8 +289,8 @@ async function openSubtitlePopup(imdbId, query) {
     const titleEl = document.getElementById('subModalTitle');
     const subtitleEl = document.getElementById('subModalSubtitle');
 
-    titleEl.textContent = query ? `ترجمات: ${query}` : 'ترجمات عربية';
-    subtitleEl.textContent = 'جاري البحث...';
+    titleEl.textContent = query ? `ترجمات: ${query}` : 'الترجمات العربية';
+    subtitleEl.textContent = 'جاري استعلام OpenSubtitles...';
     body.innerHTML = `<div class="sub-loader"><div class="sub-spinner"></div></div>`;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -314,10 +311,10 @@ async function openSubtitlePopup(imdbId, query) {
             subtitleCache[cacheKey] = results;
         }
 
-        subtitleEl.textContent = results.length > 0 ? `وُجد ${results.length} ترجمة عربية` : 'لم يتم العثور على ترجمة عربية';
+        subtitleEl.textContent = results.length > 0 ? `تم العثور على ${results.length} ملف ترجمة` : 'لم يتم العثور على نتائج للترجمة';
 
         if (results.length === 0) {
-            body.innerHTML = `<div class="sub-empty"><p class="text-slate-400 font-bold">لا توجد ترجمات عربية مطابقة.</p></div>`;
+            body.innerHTML = `<div class="sub-empty"><p class="text-slate-400 font-bold">لا توجد ملفات ترجمة عربية متوفرة لهذا العمل.</p></div>`;
             return;
         }
 
@@ -334,7 +331,7 @@ async function openSubtitlePopup(imdbId, query) {
             </div>`;
         }).join('');
     } catch (err) {
-        body.innerHTML = `<div class="sub-empty"><p class="text-red-400">فشل تحميل قائمة الترجمة.</p></div>`;
+        body.innerHTML = `<div class="sub-empty"><p class="text-red-400">حدث خطأ أثناء تحميل ملفات الترجمة.</p></div>`;
     }
 }
 
@@ -350,15 +347,14 @@ async function downloadSubtitle(fileId, fileName, btnEl) {
             a.href = blobUrl;
             a.download = fileName.endsWith('.srt') ? fileName : fileName + '.srt';
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            showToast('✅ تم تحميل ملف الترجمة بنجاح!');
+            showToast('✅ تم تحميل الترجمة بنجاح');
         }
-    } catch (err) { showToast('❌ تعذر تحميل الملف.'); }
+    } catch (err) { showToast('❌ فشل تحميل الملف'); }
     btnEl.disabled = false;
 }
 
 function closeSubModal() { document.getElementById('subtitleModal').classList.remove('active'); document.body.style.overflow = ''; }
 
-// ===== إثراء بيانات الـ IMDb المعجل للترجمات المباشرة =====
 const imdbCache = {};
 async function getIMDbID(title, year) {
     const cacheKey = title.toLowerCase().trim() + (year ? '_' + year : '');
@@ -408,7 +404,7 @@ function showToast(msg) {
 
 function copyMagnet(link, btnElement) {
     navigator.clipboard.writeText(link).then(() => {
-        showToast('تم نسخ الرابط بنجاح!');
+        showToast('تم نسخ الرابط بنجاح');
         const oldHtml = btnElement.innerHTML; btnElement.innerHTML = '<i class="fas fa-check"></i>';
         setTimeout(() => { btnElement.innerHTML = oldHtml; }, 2000);
     });
@@ -461,7 +457,7 @@ function renderResults() {
     });
 
     if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 bg-card rounded-3xl border border-slate-700">لا توجد نتائج مطابقة للفرز حالياً.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 bg-card rounded-3xl border border-slate-700">لا توجد نتائج تطابق الفلاتر المحددة.</div>`;
         return;
     }
 
@@ -493,7 +489,7 @@ function renderResults() {
     }).join('');
 }
 
-// ===== محركات البحث الستة الفعالة والقوية بنظام الـ JSON والـ RSS المفتوح =====
+// ===== محركات البحث المحدثة والمنظفة تلقائياً =====
 
 async function searchTPB(query) {
     try {
@@ -577,11 +573,11 @@ async function searchTokyoToshokan(query) {
     } catch (e) {} return [];
 }
 
-// ===== دالة التحكم الرئيسية في البث والدمج التدفّقي للنتائج =====
+// ===== دالة البحث والتحكم المعززة بـ Race Timeout لإنهاء البطء ثانياً بثانية =====
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
     const cleanQuery = sanitizeQuery(rawQuery);
-    if (!cleanQuery) { setStatus('يرجى إدخال اسم العمل للبدء.', 'info'); return; }
+    if (!cleanQuery) { setStatus('يرجى إدخال كلمة البحث أولاً.', 'info'); return; }
 
     currentSearchQuery = cleanQuery;
     document.getElementById('loading').classList.remove('hidden');
@@ -592,24 +588,30 @@ async function searchTorrents() {
     const btn = document.getElementById('searchBtn'); const icon = document.getElementById('searchIcon'); const txt = document.getElementById('searchText');
     btn.disabled = true; icon.className = 'fas fa-circle-notch fa-spin text-sm'; txt.textContent = 'جاري البحث';
 
-    setProgress('جاري إنشاء قنوات الربط وسحب الروابط التدفّقية التلقائية...', 5);
+    setProgress('جاري الاتصال بمصادر البيانات المفتوحة...', 5);
 
     const engines = [
-        { name: 'Knaben (Meta)', func: searchKnaben },
+        { name: 'Knaben API', func: searchKnaben },
         { name: 'The Pirate Bay', func: searchTPB },
         { name: 'SolidTorrents', func: searchSolidTorrents },
         { name: 'BitSearch', func: searchBitSearch },
-        { name: 'AniDex (Anime)', func: searchAniDex },
+        { name: 'AniDex Anime', func: searchAniDex },
         { name: 'Tokyo Toshokan', func: searchTokyoToshokan }
     ];
 
     let completedRequests = 0;
     document.getElementById('sortSelect').value = 'codec';
 
+    // مهلة زمنية صارمة تضمن عدم تعليق الواجهة لأكثر من 3.5 ثوانٍ مهما حدث للخوادم
+    const ENGINE_TIMEOUT_MS = 3500; 
+
     try {
         const enginePromises = engines.map(async (engine) => {
             try {
-                const res = await engine.func(cleanQuery);
+                // سباق فوري بين دالة المحرك والمهلة الزمنية الصارمة
+                const timeoutPromise = new Promise(resolve => setTimeout(() => resolve([]), ENGINE_TIMEOUT_MS));
+                const res = await Promise.race([engine.func(cleanQuery), timeoutPromise]);
+
                 const relevant = (res || []).filter(item => {
                     item._relevance = relevanceScore(item.name, cleanQuery);
                     return item._relevance >= MIN_RELEVANCE_THRESHOLD;
@@ -624,14 +626,14 @@ async function searchTorrents() {
             } catch (err) {} 
             finally {
                 completedRequests++;
-                setProgress(`تم مسح قنوات ${engine.name}... وجدنا (${allResults.length}) رابطاً مستقراً حتى الآن`, Math.round((completedRequests / engines.length) * 100));
+                setProgress(`جاري فحص الاستجابة من ${engine.name}... (النتائج الحالية: ${allResults.length})`, Math.round((completedRequests / engines.length) * 100));
             }
         });
 
         await Promise.all(enginePromises);
         document.getElementById('progressArea').classList.add('hidden');
-        if (allResults.length === 0) setStatus('لم نتمكن من جلب نتائج دقيقة. جرب تعديل كلمات البحث.', 'error');
-    } catch (error) { setStatus('حدث خطأ غير متوقع.', 'error'); }
+        if (allResults.length === 0) setStatus('لم يتم العثور على نتائج تطابق معايير الاستعلام الدقيقة.', 'error');
+    } catch (error) { setStatus('حدث خطأ أثناء معالجة الطلب المجمع.', 'error'); }
     finally {
         document.getElementById('loading').classList.add('hidden');
         btn.disabled = false; icon.className = 'fas fa-arrow-left text-sm'; txt.textContent = 'بحث الآن';
