@@ -121,20 +121,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> SolidTorrents</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Bitsearch</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben</span>
-            </span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Snowfl</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Snowfl</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TPB</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> EZTV</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Nyaa</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> 1337x</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Torlock</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Uindex</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> MagnetDL</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> BTDigg</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> ExtTorrents</span>
-            </div>
+        </div>
     </div>
 </header>
 
@@ -169,7 +156,6 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
         </div>
     </div>
 
-    <!-- progressArea مخفي دائماً — نبقيه لتفادي أخطاء JS التي تستدعيه -->
     <div id="progressArea" class="hidden" aria-hidden="true">
         <span id="progressText"></span>
         <span id="progressPercent"></span>
@@ -197,12 +183,9 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
         </div>
     </div>
 
-    <!-- Skeleton Loaders — تظهر أثناء البحث وتختفي فور وصول النتائج الأولى -->
     <div id="skeletonGrid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-4">
-        <!-- سيتم توليد الـ skeletons بواسطة JS -->
-    </div>
+        </div>
 
-    <!-- شريط حالة البحث النصي (مخفي، يُستخدم من JS فقط) -->
     <div id="loading" class="hidden">
         <p class="sr-only" id="loadingText">جاري البحث...</p>
     </div>
@@ -235,7 +218,6 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
     </div>
 </footer>
 
-<!-- ===== نافذة الترجمة المدمجة ===== -->
 <div id="subtitleModal" onclick="closeSubModal(event)">
     <div class="sub-modal-box">
         <div class="sub-modal-header">
@@ -279,22 +261,18 @@ let currentSearchQuery = '';
 function createSkeletonCard(delay = 0) {
     return `
     <div class="skeleton-card" style="animation-delay:${delay}ms">
-        <!-- شريط المصدر والجودة -->
         <div class="flex gap-2 mb-1">
             <div class="skeleton h-5 w-24 rounded-full"></div>
             <div class="skeleton h-5 w-16 rounded-full"></div>
             <div class="skeleton h-5 w-20 rounded-full mr-auto"></div>
         </div>
-        <!-- عنوان الملف (سطران) -->
         <div class="skeleton h-4 w-full rounded"></div>
         <div class="skeleton h-4 w-3/4 rounded"></div>
-        <!-- بيانات Seeds/Size -->
         <div class="flex gap-3 mt-1">
             <div class="skeleton h-8 w-16 rounded-lg flex-1"></div>
             <div class="skeleton h-8 w-16 rounded-lg flex-1"></div>
             <div class="skeleton h-8 w-24 rounded-lg flex-1"></div>
         </div>
-        <!-- أزرار الإجراءات -->
         <div class="flex gap-2 mt-2">
             <div class="skeleton h-10 w-12 rounded-xl flex-shrink-0"></div>
             <div class="skeleton h-10 rounded-xl flex-1"></div>
@@ -951,7 +929,142 @@ function renderResults() {
     }).join('');
 }
 
-// محركات البحث 
+// async function searchYTS(query) {
+    try {
+        const url = 'https://yts.mx/api/v2/list_movies.json?query_term=' + encodeURIComponent(query);
+        const data = await smartFetch(url, 'json');
+        if (data && data.data && data.data.movies) {
+            let results = [];
+            data.data.movies.forEach(movie => {
+                if (movie.torrents) {
+                    movie.torrents.forEach(torrent => {
+                        results.push({
+                            name: `${movie.title} (${movie.year}) [${torrent.quality}] [${torrent.type}] YIFY`,
+                            magnet: `magnet:?xt=urn:btih:${torrent.hash}&dn=${encodeURIComponent(movie.title)}&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80`,
+                            size: torrent.size_bytes || 0,
+                            seeds: torrent.seeds || 0,
+                            peers: torrent.peers || 0,
+                            source: 'YTS',
+                            imdb: movie.imdb_code
+                        });
+                    });
+                }
+            });
+            return results;
+        }
+        return [];
+    } catch (e) { return []; }
+}
+
+async function searchSolidTorrents(query) {
+    try {
+        const url = 'https://solidtorrents.to/api/v1/search?q=' + encodeURIComponent(query) + '&category=all&sort=seeders';
+        const data = await smartFetch(url, 'json');
+        if (data && Array.isArray(data.results)) {
+            return data.results.map(item => ({
+                name: item.title,
+                magnet: item.magnet,
+                size: item.size || 0,
+                seeds: item.swarm?.seeders || 0,
+                peers: item.swarm?.leechers || 0,
+                source: 'SolidTorrents'
+            }));
+        }
+        return [];
+    } catch (e) { return []; }
+}
+
+async function searchBitsearch(query) {
+    try {
+        const url = 'https://bitsearch.to/search?q=' + encodeURIComponent(query);
+        const html = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const items = [];
+        doc.querySelectorAll('.search-result').forEach(row => {
+            const titleEl = row.querySelector('.title a');
+            const magnetEl = row.querySelector('.links a.magnet');
+            const stats = row.querySelectorAll('.stats div');
+            
+            if (titleEl && magnetEl) {
+                let sizeBytes = 0;
+                let seeds = 0;
+                let peers = 0;
+                
+                stats.forEach(stat => {
+                    const text = stat.textContent.trim();
+                    if (text.match(/(GB|MB|KB|B)$/i)) {
+                        const match = text.match(/([\d.]+)\s*(GB|MB|KB|B)/i);
+                        if (match) {
+                            const val = parseFloat(match[1]);
+                            const unit = match[2].toUpperCase();
+                            if (unit === 'GB') sizeBytes = val * 1024 * 1024 * 1024;
+                            else if (unit === 'MB') sizeBytes = val * 1024 * 1024;
+                            else if (unit === 'KB') sizeBytes = val * 1024;
+                            else sizeBytes = val;
+                        }
+                    } else if (stat.querySelector('img[alt="Seeder"]')) {
+                        seeds = parseInt(text) || 0;
+                    } else if (stat.querySelector('img[alt="Leecher"]')) {
+                        peers = parseInt(text) || 0;
+                    }
+                });
+
+                items.push({
+                    name: titleEl.textContent.trim(),
+                    magnet: magnetEl.href,
+                    size: sizeBytes,
+                    seeds: seeds,
+                    peers: peers,
+                    source: 'Bitsearch'
+                });
+            }
+        });
+        return items;
+    } catch (e) { return []; }
+}
+
+async function searchEZTV(query) {
+    try {
+        const url = 'https://eztvx.to/search/' + encodeURIComponent(query.replace(/\s+/g, '-'));
+        const html = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const items = [];
+        doc.querySelectorAll('tr.forum_header_border').forEach(row => {
+            const titleEl = row.querySelector('a.epinfo');
+            const magnetEl = row.querySelector('a.magnet');
+            const sizeEl = row.querySelector('td:nth-child(4)');
+            const seedEl = row.querySelector('td.forum_thread_post_end font');
+            
+            if (titleEl && magnetEl) {
+                let sizeBytes = 0;
+                if (sizeEl) {
+                    const text = sizeEl.textContent.trim();
+                    const match = text.match(/([\d.]+)\s*(GB|MB|KB)/i);
+                    if (match) {
+                        const val = parseFloat(match[1]);
+                        const unit = match[2].toUpperCase();
+                        if (unit === 'GB') sizeBytes = val * 1024 * 1024 * 1024;
+                        else if (unit === 'MB') sizeBytes = val * 1024 * 1024;
+                        else sizeBytes = val * 1024;
+                    }
+                }
+                
+                items.push({
+                    name: titleEl.textContent.trim(),
+                    magnet: magnetEl.href,
+                    size: sizeBytes,
+                    seeds: seedEl ? parseInt(seedEl.textContent) || 0 : 0,
+                    peers: 0,
+                    source: 'EZTV'
+                });
+            }
+        });
+        return items;
+    } catch (e) { return []; }
+}
+
 async function searchTPB(query) {
     try {
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
@@ -963,8 +1076,7 @@ async function searchTPB(query) {
                 magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
                 size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
             }));
-            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
-                return items;
+            return items;
         }
         return [];
     } catch (e) { return []; }
@@ -1084,7 +1196,7 @@ async function searchTorrents() {
 
     setProgress('جاري إنشاء قنوات الاتصال بخوادم التورنت...', 5);
 
-        const engines = [
+    const engines = [
         { name: 'YTS',           func: searchYTS,           delay: 0   },
         { name: 'The Pirate Bay',func: searchTPB,           delay: 0   },
         { name: 'EZTV',          func: searchEZTV,          delay: 0   },
