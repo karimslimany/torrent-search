@@ -115,12 +115,12 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
             </div>
         </div>
         <div class="hidden md:flex items-center gap-4 text-xs font-medium text-slate-400">
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> YTS</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> The Pirate Bay</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> EZTV</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> SolidTorrents</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Bitsearch</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TPB</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> YTS</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Nyaa</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> MagnetDL</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Bitsearch</span>
         </div>
     </div>
 </header>
@@ -209,7 +209,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                 <h3 class="text-slate-300 font-bold">إخلاء مسؤولية قانوني</h3>
             </div>
             <p class="text-xs text-slate-500 max-w-3xl leading-relaxed">
-                موقع <strong>TorrentFinder</strong> هو مجرد أداة برمجية (محرك بحث) تقوم بجمع وفهرسة البيانات والروابط المتاحة بشكل عام على شبكة الإنترنت. نحن <strong>لا نستضيف، ولا نرفع، ولا نخزن</strong> أي ملفات تورنت أو مواد محمية بحقوق الطبع والنشر على خوادمنا. يتحمل المستخدم بمفرده المسؤولية القانونية والأخلاقية الكاملة عن كيفية استخدام الروابط المقدمة والامتثال لقوانين حقوق النشر في بلده.
+                موقع <strong>TorrentFinder</strong> هو مجرد أداة برمجية (محرك بحث) تقوم بجمع وفهرسة البيانات والروابط المتاحة بشكل عام على شبكة الإنترنت. نحن <strong>لا نستضيف، ولا نرفع، ولا نخزن</strong> أي ملفات تورنت. يتحمل المستخدم بمفرده المسؤولية الكاملة.
             </p>
             <div class="mt-6 text-[10px] text-slate-600 uppercase tracking-widest font-bold">
                 &copy; 2026 TorrentFinder Search Engine. All rights reserved.
@@ -426,7 +426,6 @@ async function openSubtitlePopup(imdbId, query) {
             const fileId = attr.files?.[0]?.file_id;
             const starsCount = rating ? Math.round(parseFloat(rating) / 2) : 0;
             const stars = rating ? '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount) : '';
-            // حماية علامات الاقتباس أثناء تمرير اسم الملف في دالة onclick
             const safeReleaseName = release.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             return `
@@ -851,17 +850,19 @@ function renderResults() {
 }
 
 // ============================================================
-// محركات البحث الأساسية
+// محركات البحث 
 // ============================================================
 
 async function searchYTS(query) {
     try {
         const url = 'https://yts.mx/api/v2/list_movies.json?query_term=' + encodeURIComponent(query);
         const data = await smartFetch(url, 'json');
-        if (data && data.data && data.data.movies) {
+        
+        // التحقق من أن response يحتوي على أفلام فعلياً
+        if (data && data.data && Array.isArray(data.data.movies)) {
             let results = [];
             data.data.movies.forEach(movie => {
-                if (movie.torrents) {
+                if (Array.isArray(movie.torrents)) {
                     movie.torrents.forEach(torrent => {
                         results.push({
                             name: `${movie.title} (${movie.year}) [${torrent.quality}] [${torrent.type}] YIFY`,
@@ -878,110 +879,6 @@ async function searchYTS(query) {
             return results;
         }
         return [];
-    } catch (e) { return []; }
-}
-
-async function searchSolidTorrents(query) {
-    try {
-        const url = 'https://solidtorrents.to/api/v1/search?q=' + encodeURIComponent(query) + '&category=all&sort=seeders';
-        const data = await smartFetch(url, 'json');
-        if (data && Array.isArray(data.results)) {
-            return data.results.map(item => ({
-                name: item.title,
-                magnet: item.magnet,
-                size: item.size || 0,
-                seeds: item.swarm?.seeders || 0,
-                peers: item.swarm?.leechers || 0,
-                source: 'SolidTorrents'
-            }));
-        }
-        return [];
-    } catch (e) { return []; }
-}
-
-async function searchBitsearch(query) {
-    try {
-        const url = 'https://bitsearch.to/search?q=' + encodeURIComponent(query);
-        const html = await smartFetch(url, 'text');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        doc.querySelectorAll('.search-result').forEach(row => {
-            const titleEl = row.querySelector('.title a');
-            const magnetEl = row.querySelector('.links a.magnet');
-            const stats = row.querySelectorAll('.stats div');
-            
-            if (titleEl && magnetEl) {
-                let sizeBytes = 0, seeds = 0, peers = 0;
-                stats.forEach(stat => {
-                    const text = stat.textContent.trim();
-                    if (text.match(/(GB|MB|KB|B)$/i)) {
-                        const match = text.match(/([\d.]+)\s*(GB|MB|KB|B)/i);
-                        if (match) {
-                            const val = parseFloat(match[1]);
-                            const unit = match[2].toUpperCase();
-                            if (unit === 'GB') sizeBytes = val * 1024 * 1024 * 1024;
-                            else if (unit === 'MB') sizeBytes = val * 1024 * 1024;
-                            else if (unit === 'KB') sizeBytes = val * 1024;
-                            else sizeBytes = val;
-                        }
-                    } else if (stat.querySelector('img[alt="Seeder"]')) {
-                        seeds = parseInt(text) || 0;
-                    } else if (stat.querySelector('img[alt="Leecher"]')) {
-                        peers = parseInt(text) || 0;
-                    }
-                });
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.href,
-                    size: sizeBytes,
-                    seeds: seeds,
-                    peers: peers,
-                    source: 'Bitsearch'
-                });
-            }
-        });
-        return items;
-    } catch (e) { return []; }
-}
-
-async function searchEZTV(query) {
-    try {
-        const url = 'https://eztvx.to/search/' + encodeURIComponent(query.replace(/\s+/g, '-'));
-        const html = await smartFetch(url, 'text');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        doc.querySelectorAll('tr.forum_header_border').forEach(row => {
-            const titleEl = row.querySelector('a.epinfo');
-            const magnetEl = row.querySelector('a.magnet');
-            const sizeEl = row.querySelector('td:nth-child(4)');
-            const seedEl = row.querySelector('td.forum_thread_post_end font');
-            
-            if (titleEl && magnetEl) {
-                let sizeBytes = 0;
-                if (sizeEl) {
-                    const text = sizeEl.textContent.trim();
-                    const match = text.match(/([\d.]+)\s*(GB|MB|KB)/i);
-                    if (match) {
-                        const val = parseFloat(match[1]);
-                        const unit = match[2].toUpperCase();
-                        if (unit === 'GB') sizeBytes = val * 1024 * 1024 * 1024;
-                        else if (unit === 'MB') sizeBytes = val * 1024 * 1024;
-                        else sizeBytes = val * 1024;
-                    }
-                }
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.href,
-                    size: sizeBytes,
-                    seeds: seedEl ? parseInt(seedEl.textContent) || 0 : 0,
-                    peers: 0,
-                    source: 'EZTV'
-                });
-            }
-        });
-        return items;
     } catch (e) { return []; }
 }
 
@@ -1045,6 +942,144 @@ async function searchKnaben(query) {
     } catch (e) { return []; }
 }
 
+async function searchNyaa(query) {
+    try {
+        const url = `https://nyaa.si/?page=rss&q=${encodeURIComponent(query)}&c=0_0&f=0`;
+        const xmlText = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlText, 'text/xml');
+        const items = [];
+        
+        xml.querySelectorAll('item').forEach(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const magnet = item.querySelector('link')?.textContent || '';
+            
+            let seeds = 0, peers = 0, sizeBytes = 0;
+            
+            const seedNode = item.getElementsByTagName('nyaa:seeders')[0] || item.getElementsByTagName('seeders')[0];
+            if(seedNode) seeds = parseInt(seedNode.textContent) || 0;
+            
+            const peerNode = item.getElementsByTagName('nyaa:leechers')[0] || item.getElementsByTagName('leechers')[0];
+            if(peerNode) peers = parseInt(peerNode.textContent) || 0;
+            
+            const sizeNode = item.getElementsByTagName('nyaa:size')[0] || item.getElementsByTagName('size')[0];
+            if (sizeNode) {
+                const match = sizeNode.textContent.match(/([\d.]+)\s*(GiB|MiB|KiB|Bytes)/i);
+                if (match) {
+                    const val = parseFloat(match[1]);
+                    const unit = match[2].toLowerCase();
+                    if (unit === 'gib') sizeBytes = val * 1024 * 1024 * 1024;
+                    else if (unit === 'mib') sizeBytes = val * 1024 * 1024;
+                    else if (unit === 'kib') sizeBytes = val * 1024;
+                    else sizeBytes = val;
+                }
+            }
+            
+            const infoHashNode = item.getElementsByTagName('nyaa:infoHash')[0] || item.getElementsByTagName('infoHash')[0];
+            let finalMagnet = magnet;
+            if (infoHashNode && !magnet.startsWith('magnet:')) {
+                finalMagnet = `magnet:?xt=urn:btih:${infoHashNode.textContent}&dn=${encodeURIComponent(title)}&tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce`;
+            }
+            
+            if(finalMagnet.startsWith('magnet:')) {
+                items.push({ name: title, magnet: finalMagnet, size: sizeBytes, seeds: seeds, peers: peers, source: 'Nyaa' });
+            }
+        });
+        return items;
+    } catch (e) { return []; }
+}
+
+async function searchMagnetDL(query) {
+    try {
+        const clean = query.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        if (!clean) return [];
+        const firstLetter = clean.charAt(0);
+        const url = `https://www.magnetdl.com/${firstLetter}/${clean}/`;
+        
+        const html = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const items = [];
+        
+        doc.querySelectorAll('.download tbody tr').forEach(row => {
+            const titleEl = row.querySelector('.n a');
+            const magnetEl = row.querySelector('.m a');
+            const sizeEl = row.querySelector('td:nth-child(6)');
+            const seedEl = row.querySelector('td.s');
+            const peerEl = row.querySelector('td.l');
+            
+            if (titleEl && magnetEl) {
+                let sizeBytes = 0;
+                if (sizeEl) {
+                    const match = sizeEl.textContent.trim().match(/([\d.]+)\s*(GB|MB|KB)/i);
+                    if (match) {
+                        const val = parseFloat(match[1]);
+                        const unit = match[2].toUpperCase();
+                        if (unit === 'GB') sizeBytes = val * 1024 * 1024 * 1024;
+                        else if (unit === 'MB') sizeBytes = val * 1024 * 1024;
+                        else sizeBytes = val * 1024;
+                    }
+                }
+                items.push({
+                    name: titleEl.getAttribute('title') || titleEl.textContent.trim(),
+                    magnet: magnetEl.href,
+                    size: sizeBytes,
+                    seeds: parseInt(seedEl?.textContent) || 0,
+                    peers: parseInt(peerEl?.textContent) || 0,
+                    source: 'MagnetDL'
+                });
+            }
+        });
+        return items;
+    } catch (e) { return []; }
+}
+
+async function searchBitsearch(query) {
+    try {
+        const url = 'https://bitsearch.to/search?q=' + encodeURIComponent(query);
+        const html = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const items = [];
+        doc.querySelectorAll('.search-result').forEach(row => {
+            const titleEl = row.querySelector('.title a');
+            const magnetEl = row.querySelector('.links a.magnet');
+            const stats = row.querySelectorAll('.stats div');
+            
+            if (titleEl && magnetEl) {
+                let sizeBytes = 0, seeds = 0, peers = 0;
+                stats.forEach(stat => {
+                    const text = stat.textContent.trim();
+                    if (text.match(/(GB|MB|KB|B)$/i)) {
+                        const match = text.match(/([\d.]+)\s*(GB|MB|KB|B)/i);
+                        if (match) {
+                            const val = parseFloat(match[1]);
+                            const unit = match[2].toUpperCase();
+                            if (unit === 'GB') sizeBytes = val * 1024 * 1024 * 1024;
+                            else if (unit === 'MB') sizeBytes = val * 1024 * 1024;
+                            else if (unit === 'KB') sizeBytes = val * 1024;
+                            else sizeBytes = val;
+                        }
+                    } else if (stat.querySelector('img[alt="Seeder"]')) {
+                        seeds = parseInt(text) || 0;
+                    } else if (stat.querySelector('img[alt="Leecher"]')) {
+                        peers = parseInt(text) || 0;
+                    }
+                });
+                items.push({
+                    name: titleEl.textContent.trim(),
+                    magnet: magnetEl.href,
+                    size: sizeBytes,
+                    seeds: seeds,
+                    peers: peers,
+                    source: 'Bitsearch'
+                });
+            }
+        });
+        return items;
+    } catch (e) { return []; }
+}
+
 // ============================================================
 // الدالة الرئيسية المجمعة (Search Engine Controller)
 // ============================================================
@@ -1078,12 +1113,12 @@ async function searchTorrents() {
     setProgress('جاري إنشاء قنوات الاتصال بخوادم التورنت...', 5);
 
     const engines = [
-        { name: 'YTS',           func: searchYTS,           delay: 0   },
-        { name: 'The Pirate Bay',func: searchTPB,           delay: 0   },
-        { name: 'EZTV',          func: searchEZTV,          delay: 0   },
-        { name: 'SolidTorrents', func: searchSolidTorrents, delay: 0   },
-        { name: 'Bitsearch',     func: searchBitsearch,     delay: 100 },
-        { name: 'Knaben',        func: searchKnaben,        delay: 0   }
+        { name: 'TPB',      func: searchTPB,      delay: 0   },
+        { name: 'Knaben',   func: searchKnaben,   delay: 0   },
+        { name: 'YTS',      func: searchYTS,      delay: 0   },
+        { name: 'Nyaa',     func: searchNyaa,     delay: 0   },
+        { name: 'MagnetDL', func: searchMagnetDL, delay: 50  },
+        { name: 'Bitsearch',func: searchBitsearch,delay: 100 }
     ];
 
     let completedRequests = 0;
