@@ -45,6 +45,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 .progress-fill { height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width 0.3s ease-out; }
 .badge-pulse { animation: pulse-soft 2s infinite; }
 @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+/* ===== نافذة الترجمة المدمجة ===== */
 #subtitleModal { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); }
 #subtitleModal.active { display:flex; }
 .sub-modal-box { background:#0f172a; border:1px solid rgba(99,102,241,0.3); border-radius:1.5rem; width:min(700px, 95vw); max-height:85vh; display:flex; flex-direction:column; box-shadow:0 30px 60px -10px rgba(0,0,0,0.8), 0 0 0 1px rgba(99,102,241,0.1); overflow:hidden; }
@@ -65,17 +66,6 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
 .sub-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,0.05); border-top-color:#818cf8; border-radius:50%; animation:spin 1s linear infinite; }
 .sub-empty { text-align:center; padding:3rem 1rem; color:#64748b; }
 .sub-rating-stars { color:#f59e0b; letter-spacing:1px; }
-.source-badge { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.65rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:0.4rem; text-transform:uppercase; letter-spacing:0.05em; }
-.source-tpb { background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); }
-.source-knaben { background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); }
-.source-yts { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); }
-.source-bitsearch { background:rgba(6,182,212,0.15); color:#22d3ee; border:1px solid rgba(6,182,212,0.3); }
-.source-solid { background:rgba(236,72,153,0.15); color:#f472b6; border:1px solid rgba(236,72,153,0.3); }
-.source-zooqle { background:rgba(139,92,246,0.15); color:#a78bfa; border:1px solid rgba(139,92,246,0.3); }
-.source-torrentz2 { background:rgba(107,114,128,0.15); color:#9ca3af; border:1px solid rgba(107,114,128,0.3); }
-.source-glo { background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
-.source-pirateiro { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
-.source-anime { background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); }
 </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -91,18 +81,20 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
                 <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">محرك بحث التورنت الذكي</p>
             </div>
         </div>
-        <div class="hidden lg:flex items-center gap-3 text-xs font-medium text-slate-400 flex-wrap">
+        <div class="hidden md:flex items-center gap-4 text-xs font-medium text-slate-400">
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> YTS</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Snowfl</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Snowfl</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TPB</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> EZTV</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Nyaa</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> 1337x</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Torlock</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Uindex</span>
             <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Knaben</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> BitSearch</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> SolidTorrents</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Zooqle</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Torrentz2</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> GloTorrents</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> AnimeTosho</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> LinuxTracker</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Pirateiro</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> MagnetDL</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> BTDigg</span>
+            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> ExtTorrents</span>
             </div>
     </div>
 </header>
@@ -200,6 +192,7 @@ body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8
     </div>
 </footer>
 
+<!-- ===== نافذة الترجمة المدمجة ===== -->
 <div id="subtitleModal" onclick="closeSubModal(event)">
     <div class="sub-modal-box">
         <div class="sub-modal-header">
@@ -235,27 +228,46 @@ let allResults = [];
 let currentFilter = 'all';
 let currentSearchQuery = '';
 
+// تنظيف مدخلات البحث
 function sanitizeQuery(q) {
     return q.replace(/[:;'".,\-_\[\]()!؟?]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// ---------------------------------------------------------------
+// حساب درجة التطابق (Relevance Score) بين اسم النتيجة وكلمة البحث
+// تُستخدم لفلترة الضوضاء (نتائج غير ذات صلة) وللترتيب التدريجي
+// كلما زادت الدرجة كانت النتيجة أكثر دقة ومطابقة للبحث
+// ---------------------------------------------------------------
 function relevanceScore(resultName, query) {
-    if (!query) return 1;
+    if (!query) return 1; // لا يوجد بحث نشط = لا تصفية
+
     const cleanName = resultName.toLowerCase().replace(/[\._\-\[\]()]/g, ' ').replace(/\s+/g, ' ').trim();
     const cleanQuery = query.toLowerCase().trim();
     const queryWords = cleanQuery.split(' ').filter(w => w.length > 0);
+
     if (queryWords.length === 0) return 1;
+
+    // تطابق تام للعبارة كاملة = أعلى درجة ممكنة
     if (cleanName.includes(cleanQuery)) return 100;
+
+    // عدد كلمات البحث الموجودة فعلياً داخل اسم النتيجة
     let matchedWords = 0;
     queryWords.forEach(word => {
+        // تجاهل الكلمات القصيرة جداً (أحرف ربط) من اشتراط التطابق الصارم
         if (word.length <= 1) { matchedWords += 0.3; return; }
         if (cleanName.includes(word)) matchedWords++;
     });
+
     const matchRatio = matchedWords / queryWords.length;
+
+    // النتيجة تبدأ بأول كلمة من البحث = إشارة قوية على الدقة
     const startsWithFirst = cleanName.startsWith(queryWords[0]) ? 15 : 0;
+
     return Math.round((matchRatio * 80) + startsWithFirst);
 }
 
+// الحد الأدنى لدرجة التطابق لقبول النتيجة (فلترة الضوضاء)
+// 40 تعني أن نصف كلمات البحث تقريباً يجب أن تكون موجودة على الأقل
 const MIN_RELEVANCE_THRESHOLD = 35;
 
 function detectCodec(name) {
@@ -288,54 +300,47 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function getSourceBadge(source) {
-    const map = {
-        'YTS': 'source-yts',
-        'The Pirate Bay': 'source-tpb',
-        'TPB': 'source-tpb',
-        'Knaben': 'source-knaben',
-        'BitSearch': 'source-bitsearch',
-        'SolidTorrents': 'source-solid',
-        'Zooqle': 'source-zooqle',
-        'Torrentz2': 'source-torrentz2',
-        'GloTorrents': 'source-glo',
-        'Pirateiro': 'source-pirateiro',
-        'AnimeTosho': 'source-anime',
-        'LinuxTracker': 'source-anime',
-        'TorrentProject': 'source-torrentz2'
-    };
-    return map[source] || 'source-torrentz2';
-}
-
+// ===== نظام الترجمة المدمج عبر OpenSubtitles REST API =====
 const OSUB_API_KEY = 'ASWUGwmKGozuQJ82kJXjRVjhMgIeph1t';
 const OSUB_API_BASE = 'https://api.opensubtitles.com/api/v1';
+
+// Cache لنتائج بحث الترجمة حتى لا نكرر الطلبات
 const subtitleCache = {};
 
+// فتح نافذة الترجمة المدمجة والبحث عبر API
 async function openSubtitlePopup(imdbId, query) {
     const modal = document.getElementById('subtitleModal');
     const body = document.getElementById('subModalBody');
     const titleEl = document.getElementById('subModalTitle');
     const subtitleEl = document.getElementById('subModalSubtitle');
 
+    // تحديد عنوان النافذة
     titleEl.textContent = query ? `ترجمات: ${query}` : 'ترجمات عربية';
     subtitleEl.textContent = 'جاري البحث في OpenSubtitles...';
 
+    // عرض النافذة مع حالة التحميل
     body.innerHTML = `<div class="sub-loader"><div class="sub-spinner"></div><p class="text-slate-500 text-sm animate-pulse">جاري البحث عن الترجمة...</p></div>`;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
+    // إنشاء مفتاح الكاش
     const cacheKey = (imdbId || '') + '|' + (query || '');
 
     try {
         let results = [];
+
         if (subtitleCache[cacheKey] !== undefined) {
+            // استخدام الكاش مباشرة
             results = subtitleCache[cacheKey];
         } else {
+            // بناء رابط البحث في OpenSubtitles API
             let searchUrl = `${OSUB_API_BASE}/subtitles?languages=ar&order_by=download_count&order_direction=desc`;
             if (imdbId) {
+                // البحث بـ IMDb ID (الأدق)
                 const numericId = parseInt(imdbId.replace(/^tt/, ''), 10);
                 searchUrl += `&imdb_id=${numericId}`;
             } else {
+                // البحث بالاسم كاحتياطي
                 searchUrl += `&query=${encodeURIComponent(query)}`;
             }
 
@@ -348,14 +353,19 @@ async function openSubtitlePopup(imdbId, query) {
             });
 
             if (!response.ok) throw new Error('فشل الاتصال بـ OpenSubtitles API');
+
             const data = await response.json();
-            results = (data.data || []).slice(0, 20);
+            results = (data.data || []).slice(0, 20); // أخذ أفضل 20 نتيجة
             subtitleCache[cacheKey] = results;
         }
 
-        subtitleEl.textContent = results.length > 0 ? `وُجد ${results.length} ترجمة عربية` : 'لم يتم العثور على ترجمة عربية';
+        // تحديث عنوان النافذة بعدد النتائج
+        subtitleEl.textContent = results.length > 0
+            ? `وُجد ${results.length} ترجمة عربية`
+            : 'لم يتم العثور على ترجمة عربية';
 
         if (results.length === 0) {
+            // لا توجد ترجمات - عرض رسالة مع رابط احتياطي
             const fallbackUrl = imdbId
                 ? `https://www.opensubtitles.org/ar/search/sublanguageid-ara/imdbid-${imdbId.replace(/^tt/, '')}`
                 : `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query || '')}`;
@@ -371,7 +381,8 @@ async function openSubtitlePopup(imdbId, query) {
             return;
         }
 
-        body.innerHTML = results.map((sub) => {
+        // رسم قائمة الترجمات
+        body.innerHTML = results.map((sub, idx) => {
             const attr = sub.attributes || {};
             const release = attr.release || attr.files?.[0]?.file_name || 'ترجمة عربية';
             const dlCount = attr.download_count || 0;
@@ -403,6 +414,7 @@ async function openSubtitlePopup(imdbId, query) {
         }).join('');
 
     } catch (err) {
+        // عرض رسالة خطأ مع رابط احتياطي
         const fallbackUrl = imdbId
             ? `https://www.opensubtitles.org/ar/search/sublanguageid-ara/imdbid-${imdbId.replace(/^tt/, '')}`
             : `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query || '')}`;
@@ -419,10 +431,13 @@ async function openSubtitlePopup(imdbId, query) {
     }
 }
 
+// تحميل الترجمة مباشرة عبر OpenSubtitles Download API
 async function downloadSubtitle(fileId, fileName, btnEl) {
     btnEl.disabled = true;
     btnEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري...';
+
     try {
+        // طلب رابط التحميل من API
         const response = await fetch(`${OSUB_API_BASE}/download`, {
             method: 'POST',
             headers: {
@@ -432,9 +447,13 @@ async function downloadSubtitle(fileId, fileName, btnEl) {
             },
             body: JSON.stringify({ file_id: fileId })
         });
+
         if (!response.ok) throw new Error('فشل الحصول على رابط التحميل');
+
         const data = await response.json();
+
         if (data.link) {
+            // جلب الملف كـ Blob ثم تحميله محلياً لتجاوز قيود cross-origin
             const fileRes = await fetch(data.link);
             if (!fileRes.ok) throw new Error('فشل جلب ملف الترجمة');
             const blob = await fileRes.blob();
@@ -446,9 +465,12 @@ async function downloadSubtitle(fileId, fileName, btnEl) {
             a.click();
             document.body.removeChild(a);
             setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+
+            // تحديث الزر للتأكيد
             btnEl.innerHTML = '<i class="fas fa-check"></i> تم!';
             btnEl.style.background = 'linear-gradient(135deg,#059669,#10b981)';
             showToast('✅ تم تحميل الترجمة بنجاح!');
+
             setTimeout(() => {
                 btnEl.disabled = false;
                 btnEl.innerHTML = '<i class="fas fa-download"></i> تحميل';
@@ -469,12 +491,15 @@ async function downloadSubtitle(fileId, fileName, btnEl) {
     }
 }
 
+// إغلاق نافذة الترجمة
 function closeSubModal(event) {
+    // إغلاق عند النقر على الخلفية أو زر الإغلاق
     if (event && event.target !== document.getElementById('subtitleModal')) return;
     document.getElementById('subtitleModal').classList.remove('active');
     document.body.style.overflow = '';
 }
 
+// إغلاق بمفتاح Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.getElementById('subtitleModal').classList.remove('active');
@@ -482,12 +507,16 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// Cache داخلي لتخزين نتائج OMDb — المفتاح: "عنوان_سنة" أو "عنوان"
 const imdbCache = {};
 
+// دالة OMDb الأساسية لعنوان واحد — تُستخدم فقط من enrichWithIMDb
 async function getIMDbID(title, year) {
     const cacheKey = title.toLowerCase().trim() + (year ? '_' + year : '');
     if (imdbCache[cacheKey] !== undefined) return imdbCache[cacheKey];
+
     try {
+        // محاولة 1: بنوع movie مع السنة إن وُجدت
         let url = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}&type=movie`;
         if (year) url += `&y=${year}`;
         const d1 = await smartFetch(url, 'json');
@@ -495,6 +524,8 @@ async function getIMDbID(title, year) {
             imdbCache[cacheKey] = d1.imdbID;
             return d1.imdbID;
         }
+
+        // محاولة 2: بدون تحديد النوع (مسلسل / أنمي / إلخ)
         let url2 = `https://www.omdbapi.com/?apikey=6af87d82&t=${encodeURIComponent(title)}`;
         if (year) url2 += `&y=${year}`;
         const d2 = await smartFetch(url2, 'json');
@@ -503,35 +534,53 @@ async function getIMDbID(title, year) {
             return d2.imdbID;
         }
     } catch (e) {}
+
     imdbCache[cacheKey] = null;
     return null;
 }
 
-const OMDB_CONCURRENCY = 3;
+// ---------------------------------------------------------------
+// دالة الإثراء الذكي بالدُفعات — تُوفّر طلبات OMDb بشكل كبير
+// الفكرة: نستخرج العناوين الفريدة فقط من كل دفعة نتائج، ثم
+// نُرسل طلبات OMDb لها فقط (بحد أقصى CONCURRENCY متزامن)
+// متجاهلين أي عنوان موجود بالكاش مسبقاً.
+// ---------------------------------------------------------------
+const OMDB_CONCURRENCY = 3; // طلبات OMDb متزامنة في نفس الوقت
 
 async function enrichWithIMDb(items) {
-    const uniqueTitles = new Map();
+    // الخطوة 1: استخراج عناوين فريدة غير موجودة في الكاش
+    const uniqueTitles = new Map(); // cacheKey → { title, year, indices[] }
+
     items.forEach((item, idx) => {
         const { title, year } = extractTitleAndYear(item.name || '');
         if (!title) return;
         const cacheKey = title.toLowerCase().trim() + (year ? '_' + year : '');
+
+        // إذا كانت النتيجة موجودة بالكاش، طبّقها مباشرة دون طلب جديد
         if (imdbCache[cacheKey] !== undefined) {
             if (imdbCache[cacheKey]) item.imdb = imdbCache[cacheKey];
             return;
         }
+
+        // جمع المؤشرات لنفس العنوان معاً (قد يتكرر العنوان بجودات مختلفة)
         if (!uniqueTitles.has(cacheKey)) {
             uniqueTitles.set(cacheKey, { title, year, indices: [] });
         }
         uniqueTitles.get(cacheKey).indices.push(idx);
     });
-    if (uniqueTitles.size === 0) return;
-    const entries = Array.from(uniqueTitles.entries());
+
+    if (uniqueTitles.size === 0) return; // كل شيء من الكاش
+
+    // الخطوة 2: إرسال الطلبات الجديدة بحد أقصى OMDB_CONCURRENCY معاً
+    const entries = Array.from(uniqueTitles.entries()); // [cacheKey, {title,year,indices}]
+
     for (let i = 0; i < entries.length; i += OMDB_CONCURRENCY) {
         const batch = entries.slice(i, i + OMDB_CONCURRENCY);
         await Promise.all(batch.map(async ([cacheKey, { title, year, indices }]) => {
             try {
                 const imdbId = await getIMDbID(title, year);
                 if (imdbId) {
+                    // طبّق النتيجة على جميع العناصر التي تشارك نفس العنوان
                     indices.forEach(idx => { items[idx].imdb = imdbId; });
                 }
             } catch (e) {}
@@ -539,25 +588,36 @@ async function enrichWithIMDb(items) {
     }
 }
 
+// دالة لاستخراج اسم العمل والسنة من عنوان التورنت
 function extractTitleAndYear(torrentName) {
+    // إزالة الامتدادات الشائعة والعلامات غير المرغوب فيها
     let name = torrentName
         .replace(/\.(mkv|mp4|avi|ts|m2ts|mov|wmv|flv|webm)$/i, '')
         .replace(/[\._]/g, ' ')
         .trim();
-    const yearMatch = name.match(/(19\d{2}|20\d{2})/);
+    
+    // البحث عن السنة (4 أرقام تبدأ بـ 19 أو 20)
+    const yearMatch = name.match(/\b(19\d{2}|20\d{2})\b/);
     const year = yearMatch ? yearMatch[1] : null;
+    
+    // استخراج اسم العمل: كل ما قبل السنة أو قبل أول وسم جودة
     let title = name;
     if (yearMatch) {
         title = name.substring(0, yearMatch.index).trim();
     } else {
-        const cutMatch = name.match(/(1080p|720p|2160p|4k|uhd|bluray|bdrip|webrip|web-dl|hdtv|dvdrip|x264|x265|hevc|avc|av1|h264|h265|hdr|sdr|remux)/i);
+        // قطع عند أول وسم جودة/كودك شائع
+        const cutMatch = name.match(/\b(1080p|720p|2160p|4k|uhd|bluray|bdrip|webrip|web-dl|hdtv|dvdrip|x264|x265|hevc|avc|av1|h264|h265|hdr|sdr|remux)\b/i);
         if (cutMatch) {
             title = name.substring(0, cutMatch.index).trim();
         }
     }
+    
     return { title: title.trim(), year };
 }
 
+// أداة جلب البيانات بمسارات متعددة لتجنب الحظر
+// جلب مع مهلة زمنية محددة — يُلغي الطلب تلقائياً إذا تجاوز المهلة
+// لتفادي بقاء الصفحة "عالقة" في انتظار خادم بطيء أو معطل
 async function fetchWithTimeout(url, timeoutMs) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -569,39 +629,56 @@ async function fetchWithTimeout(url, timeoutMs) {
     }
 }
 
-async function smartFetch(url, type = 'json') {
-    const TIMEOUT_MS = 10000;
-    try {
-        const res = await fetchWithTimeout(url, TIMEOUT_MS);
-        if (res.ok) return type === 'json' ? await res.json() : await res.text();
-    } catch (e) {}
+// البروكسي الخاص (Cloudflare Worker) — أسرع وأكثر موثوقية من البروكسيات
+// العامة لأنه غير مزدحم بطلبات آلاف المواقع الأخرى. يُجرَّب فور فشل
+// الاتصال المباشر، وقبل أي بروكسي عام احتياطي.
+const PRIVATE_PROXY = 'https://my-cors-proxy.karimslimany.workers.dev/?url=';
 
+async function smartFetch(url, type = 'json') {
+    // قائمة موسّعة من بروكسيات CORS — معظم المحركات (خلافاً لـ TPB) لا
+    // تدعم CORS من خوادمها مباشرة، فتعتمد كلياً على نجاح أحد هذه البروكسيات.
+    // وجود أكثر من بديل يرفع معدل النجاح إذا كان أحدها محظوراً أو مزدحماً.
     const proxies = [
+        `${PRIVATE_PROXY}${encodeURIComponent(url)}`,
         `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
         `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
         `https://thingproxy.freeboard.io/fetch/${url}`,
-        `https://cors-anywhere.herokuapp.com/${url}`
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
     ];
+
+    // مهلة 7 ثوانٍ لكل محاولة — تكفي للخوادم السليمة وتتجاوز بسرعة المعطلة
+    const TIMEOUT_MS = 7000;
+
+    try {
+        const res = await fetchWithTimeout(url, TIMEOUT_MS);
+        if(res.ok) return type === 'json' ? await res.json() : await res.text();
+    } catch(e) {}
 
     for (let proxy of proxies) {
         try {
             const res = await fetchWithTimeout(proxy, TIMEOUT_MS);
-            if (res.ok) {
+            if(res.ok) {
+                // بروكسي allorigins/get يُعيد جسماً ملفوفاً {contents: "..."} وليس المحتوى مباشرة
                 if (proxy.includes('/get?url=')) {
                     const wrapped = await res.json();
                     const raw = wrapped.contents || '';
                     return type === 'json' ? JSON.parse(raw) : raw;
                 }
+
                 if (type === 'json') {
+                    // تحقق إضافي: بعض البروكسيات (وخصوصاً البروكسي الخاص إذا
+                    // أُسيء ضبطه) قد تُعيد HTML 200 OK بدل JSON الفعلي المطلوب
+                    // (مثلاً صفحة خطأ أو موقع مختلف تماماً). نتحقق من صحة
+                    // الـJSON فعلياً قبل قبول النتيجة، وإلا ننتقل للبروكسي التالي.
                     const rawText = await res.text();
                     try {
                         return JSON.parse(rawText);
                     } catch (parseErr) {
-                        continue;
+                        continue; // المحتوى ليس JSON صالحاً، جرّب البروكسي التالي
                     }
                 }
+
                 return await res.text();
             }
         } catch (e) {}
@@ -686,28 +763,37 @@ function renderResults() {
     }
 
     filtered.sort((a, b) => {
+        // درجة التطابق محسوبة مسبقاً عند الجلب (_relevance) — احتياط لو غابت
         const relA = a._relevance ?? relevanceScore(a.name, currentSearchQuery);
         const relB = b._relevance ?? relevanceScore(b.name, currentSearchQuery);
+
         if (sortType === 'relevance') {
+            // الأكثر دقة ومطابقة للبحث أولاً، ثم الأكثر seeds
             if (relA !== relB) return relB - relA;
             return (b.seeds || 0) - (a.seeds || 0);
         }
         if (sortType === 'codec') {
+            // طبقة أولى: فصل التطابق التام (100) عن باقي النتائج ذات الصلة
+            // بحيث لا تطغى نتيجة AV1 ضعيفة الصلة على نتيجة مطابقة تماماً
             const tierA = relA >= 90 ? 0 : 1;
             const tierB = relB >= 90 ? 0 : 1;
             if (tierA !== tierB) return tierA - tierB;
+            // الترتيب: AV1 → x265/HEVC → x264/AVC → أخرى
             const pa = detectCodec(a.name).priority;
             const pb = detectCodec(b.name).priority;
             if (pa !== pb) return pa - pb;
+            // داخل نفس الـ codec: دقة أعلى أولاً (4K > 1080 > 720)
             const qa = detectQuality(a.name).priority;
             const qb = detectQuality(b.name).priority;
             if (qa !== qb) return qa - qb;
+            // نفس الـ codec ونفس الدقة: seeds أعلى أولاً
             return (b.seeds || 0) - (a.seeds || 0);
         }
         if (sortType === 'quality') {
             const qa = detectQuality(a.name).priority;
             const qb = detectQuality(b.name).priority;
             if (qa !== qb) return qa - qb;
+            // نفس الدقة: codec أفضل أولاً
             return detectCodec(a.name).priority - detectCodec(b.name).priority;
         }
         if (sortType === 'size') return (b.size || 0) - (a.size || 0);
@@ -734,19 +820,21 @@ function renderResults() {
         const source = item.source || 'Unknown';
         const magnet = item.magnet || '#';
         const safeName = escapeHtml(item.name);
-        const sourceBadgeClass = getSourceBadge(source);
 
         return `
         <div class="torrent-card bg-card rounded-2xl p-5 relative overflow-hidden group flex flex-col h-full">
             <div class="absolute top-0 right-0 w-1.5 h-full ${codec.codec === 'AV1' ? 'bg-emerald-500' : codec.codec === 'x265/HEVC' ? 'bg-blue-500' : codec.codec === 'x264/AVC' ? 'bg-amber-500' : 'bg-slate-500'} opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            
             <div class="flex items-start justify-between mb-4 gap-2">
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="${codec.class} text-[11px] px-2.5 py-1 rounded-md font-extrabold flex items-center gap-1.5 uppercase tracking-wider"><i class="fas ${codec.icon}"></i> ${codec.codec}</span>
                     <span class="${quality.class} text-[11px] font-bold px-2 py-1 rounded-md">${quality.quality}</span>
                 </div>
-                <span class="source-badge ${sourceBadgeClass}"><i class="fas fa-database mr-1"></i> ${escapeHtml(source)}</span>
+                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700 font-medium whitespace-nowrap"><i class="fas fa-database mr-1"></i> ${escapeHtml(source)}</span>
             </div>
+            
             <h3 class="font-bold text-base md:text-lg mb-4 line-clamp-3 leading-snug break-words text-slate-200 group-hover:text-white transition-colors flex-grow" title="${safeName}" dir="ltr">${safeName}</h3>
+            
             <div class="flex items-center justify-between bg-slate-900/50 p-3 rounded-xl border border-slate-800 mb-4">
                 <div class="flex items-center gap-2 text-slate-400 text-sm font-medium">
                     <i class="fas fa-hdd text-slate-500"></i> <span dir="ltr">${size}</span>
@@ -756,6 +844,7 @@ function renderResults() {
                     <span class="flex items-center gap-1 text-red-400 bg-red-400/10 px-2 py-0.5 rounded" title="المحملون (Leechers)"><i class="fas fa-arrow-down text-[10px]"></i> ${peers}</span>
                 </div>
             </div>
+            
             <div class="flex gap-2 mt-auto pt-2">
                 <a href="${escapeHtml(magnet)}" class="btn-primary flex-1 py-2.5 rounded-xl text-white transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="الفتح بالتطبيق المباشر">
                     <i class="fas fa-external-link-alt"></i> فتح
@@ -771,14 +860,7 @@ function renderResults() {
     }).join('');
 }
 
-// ============================================================
-// محركات البحث المُحدّثة (2026)
-// ============================================================
-// ✅ يعملان مباشرة بدون بروكسي: TPB, Knaben
-// ⚠️ يحتاجان بروكسي: YTS, BitSearch, SolidTorrents, Zooqle, Torrentz2, GloTorrents, Pirateiro, AnimeTosho, LinuxTracker, TorrentProject
-// ❌ تم إزالتهم: itorrentsearch (404), EZTV (API معطل), Snowfl (CORS), Uindex, BTDigg, ExtTorrents, Nyaa (استبدل بـ AnimeTosho)
-// ============================================================
-
+// محركات البحث 
 async function searchYTS(query) {
     try {
         const url = 'https://yts.mx/api/v2/list_movies.json?query_term=' + encodeURIComponent(query) + '&sort_by=seeds&order_by=desc&limit=50';
@@ -791,6 +873,7 @@ async function searchYTS(query) {
                         magnet: 'magnet:?xt=urn:btih:' + t.hash + '&dn=' + encodeURIComponent(movie.title) + '&tr=udp://tracker.opentrackr.org:1337/announce',
                         size: t.size_bytes, seeds: t.seeds || 0, peers: t.peers || 0, source: 'YTS'
                     };
+                    // لا تستخدم OMDb إذا كان movie.imdb_code موجوداً، احفظه مباشرة
                     if (movie.imdb_code) {
                         item.imdb = 'tt' + movie.imdb_code;
                     }
@@ -807,294 +890,286 @@ async function searchTPB(query) {
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
         const data = await smartFetch(url, 'json');
         if (Array.isArray(data)) {
-            return data.filter(item => item.id !== '0' && item.name).slice(0, 30).map(item => ({
+            // حد أقصى 30 نتيجة (الفلترة بالدقة تستبعد غير ذي الصلة تلقائياً)
+            const items = data.filter(item => item.id !== '0' && item.name).slice(0, 30).map(item => ({
                 name: item.name,
                 magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
                 size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
             }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+                return items;
         }
         return [];
     } catch (e) { return []; }
 }
 
-async function searchBitSearch(query) {
+async function searchEZTV(query) {
     try {
-        const url = 'https://bitsearch.to/search?q=' + encodeURIComponent(query) + '&page=1&limit=50';
-        const html = await smartFetch(url, 'text');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.search-result, .torrent');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('.title a, h3 a, .name a');
-            const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.size, .file-size');
-            const seedsEl = row.querySelector('.seeders, .seeds');
-            const peersEl = row.querySelector('.leechers, .peers');
-            if (titleEl && magnetEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                else if (sizeText.includes('TB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.getAttribute('href'),
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: parseInt(peersEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    source: 'BitSearch'
-                });
-            }
-        });
-        return items.slice(0, 30);
-    } catch (e) { return []; }
-}
-
-async function searchSolidTorrents(query) {
-    try {
-        const url = 'https://solidtorrents.to/api/v1/search?q=' + encodeURIComponent(query) + '&page=1&limit=50';
+        const url = 'https://eztv.re/api/get-torrents?limit=50&search=' + encodeURIComponent(query);
         const data = await smartFetch(url, 'json');
-        if (data && data.results && Array.isArray(data.results)) {
-            return data.results.map(item => ({
-                name: item.title || 'Unknown',
-                magnet: item.magnet || '#',
-                size: parseInt(item.size) || 0,
-                seeds: parseInt(item.seeders) || 0,
-                peers: parseInt(item.leechers) || 0,
-                source: 'SolidTorrents'
-            })).filter(r => r.magnet !== '#');
+        if (data && data.torrents && Array.isArray(data.torrents)) {
+            const items = data.torrents.map(t => ({
+                name: t.title || 'Unknown', magnet: t.magnet_url || '#',
+                size: parseInt(t.size_bytes) || 0, seeds: parseInt(t.seeds) || 0, peers: parseInt(t.peers) || 0, source: 'EZTV'
+            }));
+            // إثراء الدفعة كاملة بـ IMDb IDs بكفاءة عالية
+                return items;
         }
         return [];
     } catch (e) { return []; }
 }
 
-async function searchZooqle(query) {
+async function searchNyaa(query) {
     try {
-        const url = 'https://zooqle.com/search?q=' + encodeURIComponent(query) + '&pg=1';
-        const html = await smartFetch(url, 'text');
+        const url = 'https://nyaa.si/?page=rss&q=' + encodeURIComponent(query) + '&c=0_0&f=0';
+        const text = await smartFetch(url, 'text');
         const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.table-torrents tbody tr, .torrent-item');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('td a, .title a');
-            const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.progress-bar, .size');
-            const seedsEl = row.querySelector('.seeds, .seeders');
-            if (titleEl && magnetEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.getAttribute('href'),
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: 0,
-                    source: 'Zooqle'
-                });
-            }
+        const xml = parser.parseFromString(text, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        const results = Array.from(items).map(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const link = item.querySelector('link')?.textContent || '#';
+            const desc = item.querySelector('description')?.textContent || '';
+            const sizeMatch = desc.match(/Size:\s*([\d.]+\s*(MiB|GiB|KiB|B))/i);
+            const sizeStr = sizeMatch ? sizeMatch[1] : '';
+            let sizeBytes = 0;
+            if (sizeStr.includes('GiB')) sizeBytes = parseFloat(sizeStr) * 1024 * 1024 * 1024;
+            else if (sizeStr.includes('MiB')) sizeBytes = parseFloat(sizeStr) * 1024 * 1024;
+            else if (sizeStr.includes('KiB')) sizeBytes = parseFloat(sizeStr) * 1024;
+            return {
+                name: title, magnet: link.startsWith('magnet') ? link : '#',
+                size: sizeBytes, seeds: 0, peers: 0, source: 'Nyaa Anime'
+            };
         });
-        return items.slice(0, 30);
+        return results;
     } catch (e) { return []; }
 }
 
-async function searchTorrentz2(query) {
+async function search1337x(query) {
     try {
-        const url = 'https://torrentz2.nz/search?q=' + encodeURIComponent(query);
-        const html = await smartFetch(url, 'text');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.result, .torrent');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('dt a, .title a, h3 a');
-            const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.s, .size');
-            const seedsEl = row.querySelector('.u, .seeds');
-            if (titleEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl ? magnetEl.getAttribute('href') : '#',
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: 0,
-                    source: 'Torrentz2'
-                });
-            }
-        });
-        return items.slice(0, 30);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app، مع الاحتفاظ
+        // بالخادم الأصلي كمحاولة احتياطية تالية (قد يعود للعمل لاحقاً)
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/1337x/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
+
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: '1337x'
+            })).filter(r => r.magnet);
+                return items;
+        }
+
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/1337x/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
+                name: item.name || item.title, magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: '1337x'
+            }));
+                return items;
+        }
+        return [];
     } catch (e) { return []; }
 }
 
-async function searchGloTorrents(query) {
+// ملاحظة: موقع TorrentGalaxy (TGx) أُغلق نهائياً في يونيو 2024 ولم يعد
+// متاحاً بأي شكل، لذا استُبدل هنا بمحرك Torlock الفعّال والموثوق
+// عبر نفس الخادم، مع الحفاظ على اسم الدالة لتفادي تغيير أي استدعاء آخر
+async function searchTorrentGalaxy(query) {
     try {
-        const url = 'https://glodls.to/search_results.php?search=' + encodeURIComponent(query) + '&page=1';
-        const html = await smartFetch(url, 'text');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.ttable_row, .torrent-row');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('a[href*="/torrent/"], .torrent-name a');
-            const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.tdnormal, .size');
-            const seedsEl = row.querySelector('.tdseed, .seeds');
-            if (titleEl && magnetEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.getAttribute('href'),
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: 0,
-                    source: 'GloTorrents'
-                });
-            }
-        });
-        return items.slice(0, 30);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/torlock/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
+
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'Torlock'
+            })).filter(r => r.magnet);
+                return items;
+        }
+
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/torlock/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
+                name: item.name || item.title, magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'Torlock'
+            }));
+                return items;
+        }
+        return [];
     } catch (e) { return []; }
 }
 
-async function searchPirateiro(query) {
+async function searchLimeTorrents(query) {
     try {
-        const url = 'https://pirateiro.com/torrents/?search=' + encodeURIComponent(query) + '&page=1';
-        const html = await smartFetch(url, 'text');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.torrent, .result');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('.title a, h3 a');
-            const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.size');
-            const seedsEl = row.querySelector('.seeds, .seeders');
-            if (titleEl && magnetEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.getAttribute('href'),
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: 0,
-                    source: 'Pirateiro'
-                });
-            }
-        });
-        return items.slice(0, 30);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/limetorrent/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
+
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'LimeTorrents'
+            })).filter(r => r.magnet);
+                return items;
+        }
+
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/limetorrents/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
+                name: item.name || item.title, magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'LimeTorrents'
+            }));
+                return items;
+        }
+        return [];
     } catch (e) { return []; }
 }
 
-async function searchAnimeTosho(query) {
+async function searchUindex(query) {
     try {
-        const url = 'https://animetosho.org/search?q=' + encodeURIComponent(query);
-        const html = await smartFetch(url, 'text');
+        // uindex.org — محرك بحث متعدد المصادر يدعم RSS
+        const url = 'https://uindex.org/?q=' + encodeURIComponent(query) + '&iht=7&rss=1';
+        const text = await smartFetch(url, 'text');
         const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.entry, .torrent');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('.title a, h3 a, .link a');
-            const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.size');
-            const seedsEl = row.querySelector('.seeds');
-            if (titleEl && magnetEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.getAttribute('href'),
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: 0,
-                    source: 'AnimeTosho'
-                });
-            }
-        });
-        return items.slice(0, 30);
+        const xml = parser.parseFromString(text, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        const results = Array.from(items).slice(0, 20).map(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const enclosure = item.querySelector('enclosure');
+            const link = enclosure?.getAttribute('url') || item.querySelector('link')?.textContent || '#';
+            const sizeAttr = enclosure?.getAttribute('length') || '0';
+            // استخراج magnet من description إن وُجد
+            const desc = item.querySelector('description')?.textContent || '';
+            const magnetMatch = desc.match(/magnet:\?[^\s"<]*/i);
+            const magnet = magnetMatch ? magnetMatch[0] : (link.startsWith('magnet') ? link : '#');
+            // استخراج Seeders من description
+            const seedMatch = desc.match(/[Ss]eeders?[:\s]+(\d+)/);
+            const seeds = seedMatch ? parseInt(seedMatch[1]) : 0;
+            return {
+                name: title,
+                magnet: magnet,
+                size: parseInt(sizeAttr) || 0,
+                seeds: seeds,
+                peers: 0,
+                source: 'Uindex'
+            };
+        }).filter(r => r.magnet !== '#');
+        return results;
     } catch (e) { return []; }
 }
 
-async function searchLinuxTracker(query) {
+// محرك Knaben — محرك بحث ميتا مستقل بـ API JSON مباشر (لا يعتمد على
+// نفس الخادم الوسيط المشترك مع 1337x/TGx/Lime)، يغطي عشرات المصادر
+// دفعة واحدة، فيعمل كمصدر احتياطي قوي عند تعطل أي خادم آخر
+// محرك Knaben — محرك بحث ميتا مستقل بـ API JSON مباشر (لا يعتمد على
+// نفس الخادم الوسيط المشترك مع 1337x/TGx/Lime)، يغطي عشرات المصادر
+// دفعة واحدة (TPB, YTS, Nyaa, RARBG أرشيف...)، فيعمل كمصدر احتياطي قوي
+async function searchMagnetDL(query) {
     try {
-        const url = 'https://linuxtracker.org/?page=torrents&search=' + encodeURIComponent(query) + '&category=0';
-        const html = await smartFetch(url, 'text');
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.torrent-row, .lista');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('a[href*="details.php"], .torrent-name a');
-            const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.size');
-            const seedsEl = row.querySelector('.seeds');
-            if (titleEl && magnetEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl.getAttribute('href'),
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: 0,
-                    source: 'LinuxTracker'
-                });
-            }
-        });
-        return items.slice(0, 30);
+        // ملاحظة: torrent-api-py.vercel.app الأصلي معطل حالياً (404)؛ نبدأ
+        // مباشرة بالمرآة النشطة itorrentsearch.vercel.app
+        const mirrorUrl = 'https://itorrentsearch.vercel.app/api/magnetdl/' + encodeURIComponent(query);
+        let data = await smartFetch(mirrorUrl, 'json').catch(() => null);
+
+        if (Array.isArray(data) && data.length > 0) {
+            const items = data.map(item => ({
+                name: item.Name || item.name, magnet: item.Magnet || item.magnet,
+                size: 0, seeds: parseInt(item.Seeders) || 0, peers: parseInt(item.Leechers) || 0, source: 'MagnetDL'
+            })).filter(r => r.magnet);
+                return items;
+        }
+
+        // محاولة احتياطية: الخادم الأصلي (قد يكون معطلاً مؤقتاً)
+        const fallbackUrl = 'https://torrent-api-py.vercel.app/api/v1/magnetdl/' + encodeURIComponent(query);
+        const fallbackData = await smartFetch(fallbackUrl, 'json').catch(() => null);
+        if (Array.isArray(fallbackData)) {
+            const items = fallbackData.map(item => ({
+                name: item.name || item.title, magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'MagnetDL'
+            }));
+                return items;
+        }
+        return [];
     } catch (e) { return []; }
 }
 
-async function searchTorrentProject(query) {
+
+async function searchBTDigg(query) {
     try {
-        const url = 'https://torrentproject2.com/?t=' + encodeURIComponent(query);
+        // btdigg.org محرك بحث DHT بدون API JSON رسمي؛ نستخلص HTML البحث مباشرة
+        const url = 'https://btdigg.org/search?q=' + encodeURIComponent(query);
         const html = await smartFetch(url, 'text');
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        const items = [];
-        const rows = doc.querySelectorAll('.torrent, .result');
-        rows.forEach(row => {
-            const titleEl = row.querySelector('.title a, h3 a');
+
+        // كل نتيجة بحث على BTDigg توجد ضمن عنصر بصنف "results" يحتوي روابط magnet
+        const rows = doc.querySelectorAll('.results .one_result, .results tr');
+        const items = Array.from(rows).map(row => {
+            const titleEl = row.querySelector('.torrent_name, .ttl_tor a, a[href^="magnet:"]');
             const magnetEl = row.querySelector('a[href^="magnet:"]');
-            const sizeEl = row.querySelector('.size');
-            const seedsEl = row.querySelector('.seeds');
-            if (titleEl) {
-                const sizeText = sizeEl ? sizeEl.textContent.trim() : '';
-                let sizeBytes = 0;
-                if (sizeText.includes('GB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024 * 1024;
-                else if (sizeText.includes('MB')) sizeBytes = parseFloat(sizeText) * 1024 * 1024;
-                items.push({
-                    name: titleEl.textContent.trim(),
-                    magnet: magnetEl ? magnetEl.getAttribute('href') : '#',
-                    size: sizeBytes,
-                    seeds: parseInt(seedsEl?.textContent?.replace(/[^0-9]/g, '')) || 0,
-                    peers: 0,
-                    source: 'TorrentProject'
-                });
-            }
-        });
-        return items.slice(0, 30);
+            const name = titleEl?.textContent?.trim() || '';
+            const magnet = magnetEl?.getAttribute('href') || '#';
+            // استخراج عدد الـ files/age كبديل لعدد seeds (BTDigg لا يعرض seeders فعلياً)
+            return {
+                name: name,
+                magnet: magnet,
+                size: 0,
+                seeds: 0,
+                peers: 0,
+                source: 'BTDigg DHT'
+            };
+        }).filter(r => r.name && r.magnet.startsWith('magnet:'));
+
+        return items;
+    } catch (e) { return []; }
+}
+
+// محرك EXT Torrents — لا يوفر API JSON رسمياً، نستخدم RSS العام للموقع
+// (yml الخاص بمشروع Jackett يؤكد أن ext.to يوفر تجميعة من مصادر متعددة)
+async function searchExtTorrents(query) {
+    try {
+        const url = 'https://ext.to/search/?q=' + encodeURIComponent(query) + '&rss=1';
+        const text = await smartFetch(url, 'text');
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'text/xml');
+        const items = xml.querySelectorAll('item');
+        const results = Array.from(items).slice(0, 20).map(item => {
+            const title = item.querySelector('title')?.textContent || 'Unknown';
+            const desc = item.querySelector('description')?.textContent || '';
+            const magnetMatch = desc.match(/magnet:\?[^\s"'<]*/i);
+            const link = item.querySelector('link')?.textContent || '';
+            const magnet = magnetMatch ? magnetMatch[0] : (link.startsWith('magnet:') ? link : '#');
+            const seedMatch = desc.match(/[Ss]eed(?:ers?)?[:\s]+(\d+)/);
+            const seeds = seedMatch ? parseInt(seedMatch[1]) : 0;
+            return {
+                name: title,
+                magnet: magnet,
+                size: 0,
+                seeds: seeds,
+                peers: 0,
+                source: 'EXT Torrents'
+            };
+        }).filter(r => r.magnet.startsWith('magnet:'));
+
+        return results;
     } catch (e) { return []; }
 }
 
 async function searchKnaben(query) {
     try {
+        // العنوان الصحيح للـ API هو api.knaben.org (وليس knaben.org/api)
+        // ويتطلب طلب POST بجسم JSON حسب التوثيق الرسمي
         const apiUrl = 'https://api.knaben.org/v1';
         const requestBody = JSON.stringify({
             search_field: 'title',
@@ -1107,10 +1182,12 @@ async function searchKnaben(query) {
             hide_xxx: true
         });
 
+        // smartFetch مصمم لـ GET فقط، لذا نُرسل الطلب يدوياً هنا
+        // مع نفس فلسفة timeout ثم بروكسي خاص فبروكسي عام عند الفشل
         let data = null;
         try {
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 10000);
+            const timer = setTimeout(() => controller.abort(), 7000);
             const res = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1121,12 +1198,13 @@ async function searchKnaben(query) {
             if (res.ok) data = await res.json();
         } catch (e) {}
 
+        // محاولة احتياطية أولى عبر البروكسي الخاص (Cloudflare Worker) — يدعم POST
         if (!data) {
             try {
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+                const privateProxyUrl = `${PRIVATE_PROXY}${encodeURIComponent(apiUrl)}`;
                 const controllerP = new AbortController();
-                const timerP = setTimeout(() => controllerP.abort(), 10000);
-                const resP = await fetch(proxyUrl, {
+                const timerP = setTimeout(() => controllerP.abort(), 7000);
+                const resP = await fetch(privateProxyUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: requestBody,
@@ -1137,9 +1215,26 @@ async function searchKnaben(query) {
             } catch (e) {}
         }
 
+        // محاولة احتياطية أخيرة عبر بروكسي CORS عام إذا فشل ما سبق
+        if (!data) {
+            try {
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+                const controller2 = new AbortController();
+                const timer2 = setTimeout(() => controller2.abort(), 7000);
+                const res2 = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: requestBody,
+                    signal: controller2.signal
+                });
+                clearTimeout(timer2);
+                if (res2.ok) data = await res2.json();
+            } catch (e) {}
+        }
+
         if (!data || !Array.isArray(data.hits)) return [];
 
-        return data.hits.map(hit => ({
+        const items = data.hits.map(hit => ({
             name: hit.title || 'Unknown',
             magnet: hit.magnetUrl || hit.link || '#',
             size: parseInt(hit.bytes) || 0,
@@ -1147,13 +1242,52 @@ async function searchKnaben(query) {
             peers: parseInt(hit.peers) || 0,
             source: 'Knaben'
         })).filter(r => r.magnet !== '#');
+
+        return items;
+    } catch (e) { return []; }
+}
+
+// محرك Snowfl — محرك بحث ميتا يجمع نتائج من مصادر متعددة عبر API
+// يدعم CORS مباشرة من المتصفح بدون بروكسي، مما يجعله موثوقاً للغاية
+// يتطلب جلب token أولاً من الصفحة الرئيسية ثم استخدامه في البحث
+async function searchSnowfl(query) {
+    try {
+        // الخطوة 1: جلب token الديناميكي من الصفحة الرئيسية
+        const homeRes = await fetchWithTimeout('https://snowfl.com/', 7000);
+        if (!homeRes.ok) return [];
+        const homeHtml = await homeRes.text();
+
+        // استخراج token من الـ JS المضمن في الصفحة
+        const tokenMatch = homeHtml.match(/b\s*=\s*['"]([a-f0-9]{40})['"]/i)
+                        || homeHtml.match(/['"]([a-f0-9]{40})['"]/);
+        if (!tokenMatch) return [];
+        const token = tokenMatch[1];
+
+        // الخطوة 2: البحث باستخدام الـ token
+        const searchUrl = `https://snowfl.com/${token}?q=${encodeURIComponent(query)}&p=0&s=NONE&t=NONE&x=0`;
+        const res = await fetchWithTimeout(searchUrl, 7000);
+        if (!res.ok) return [];
+        const data = await res.json();
+
+        if (!Array.isArray(data)) return [];
+
+        return data
+            .filter(item => item.magnet && item.name)
+            .map(item => ({
+                name: item.name,
+                magnet: item.magnet,
+                size: 0,
+                seeds: parseInt(item.seeder) || 0,
+                peers: parseInt(item.leecher) || 0,
+                source: 'Snowfl'
+            }));
     } catch (e) { return []; }
 }
 
 async function searchTorrents() {
     const rawQuery = document.getElementById('searchInput').value;
     const cleanQuery = sanitizeQuery(rawQuery);
-
+    
     if (!cleanQuery) {
         setStatus('<i class="fas fa-info-circle mr-2"></i> يرجى إدخال اسم العمل للبدء في البحث.', 'info');
         return;
@@ -1170,7 +1304,7 @@ async function searchTorrents() {
     const btn = document.getElementById('searchBtn');
     const icon = document.getElementById('searchIcon');
     const txt = document.getElementById('searchText');
-
+    
     btn.disabled = true;
     btn.classList.add('opacity-80', 'cursor-not-allowed');
     icon.className = 'fas fa-circle-notch fa-spin text-sm';
@@ -1180,17 +1314,18 @@ async function searchTorrents() {
 
     const engines = [
         { name: 'YTS', func: searchYTS, delay: 0 },
+        { name: 'Snowfl', func: searchSnowfl, delay: 0 },
         { name: 'TPB', func: searchTPB, delay: 0 },
-        { name: 'Knaben', func: searchKnaben, delay: 0 },
-        { name: 'BitSearch', func: searchBitSearch, delay: 100 },
-        { name: 'SolidTorrents', func: searchSolidTorrents, delay: 200 },
-        { name: 'Zooqle', func: searchZooqle, delay: 300 },
-        { name: 'Torrentz2', func: searchTorrentz2, delay: 400 },
-        { name: 'GloTorrents', func: searchGloTorrents, delay: 500 },
-        { name: 'Pirateiro', func: searchPirateiro, delay: 600 },
-        { name: 'AnimeTosho', func: searchAnimeTosho, delay: 700 },
-        { name: 'LinuxTracker', func: searchLinuxTracker, delay: 800 },
-        { name: 'TorrentProject', func: searchTorrentProject, delay: 900 }
+        { name: 'EZTV', func: searchEZTV, delay: 0 },
+        { name: 'Nyaa', func: searchNyaa, delay: 100 },
+        { name: '1337x', func: search1337x, delay: 0 },
+        { name: 'Torlock', func: searchTorrentGalaxy, delay: 300 },
+        { name: 'Lime', func: searchLimeTorrents, delay: 600 },
+        { name: 'Uindex', func: searchUindex, delay: 200 },
+        { name: 'Knaben', func: searchKnaben, delay: 150 },
+        { name: 'MagnetDL', func: searchMagnetDL, delay: 400 },
+        { name: 'BTDigg', func: searchBTDigg, delay: 700 },
+        { name: 'ExtTorrents', func: searchExtTorrents, delay: 350 }
     ];
 
     let completedRequests = 0;
@@ -1198,14 +1333,22 @@ async function searchTorrents() {
     document.getElementById('sortSelect').value = 'codec';
 
     try {
+        // ------------------------------------------------------------
+        // البث التدريجي (Streaming): كل محرك يُعرض فور اكتماله بدل
+        // انتظار Promise.all للجميع — هذا يحل مشكلة "التقطع" الظاهري
+        // الناتج عن انتظار أبطأ محرك (مثل Uindex/TGx ذوي التأخير).
+        // ------------------------------------------------------------
         const enginePromises = engines.map(async (engine) => {
             if (engine.delay > 0) {
                 await new Promise(resolve => setTimeout(resolve, engine.delay));
             }
             try {
                 const res = await engine.func(cleanQuery);
+
+                // تشخيص: عدد النتائج الخام لكل محرك قبل الفلترة (تظهر في console فقط، لا تؤثر على الواجهة)
                 console.log(`[${engine.name}] نتائج خام: ${(res || []).length}`);
 
+                // ---- فلترة الضوضاء: استبعاد النتائج غير ذات الصلة ----
                 const relevant = (res || []).filter(item => {
                     item._relevance = relevanceScore(item.name, cleanQuery);
                     return item._relevance >= MIN_RELEVANCE_THRESHOLD;
@@ -1213,17 +1356,20 @@ async function searchTorrents() {
 
                 console.log(`[${engine.name}] بعد فلترة الدقة: ${relevant.length}`);
 
+                // إضافة النتائج وعرضها فوراً بدون انتظار OMDb
                 if (relevant.length > 0) {
                     allResults = allResults.concat(relevant);
                     document.getElementById('statsBar').classList.remove('hidden');
                     updateStatsBar();
                     renderResults();
+
+                    // إثراء IMDb في الخلفية بدون انتظار — يُحدّث زر الترجمة لاحقاً
+                    // بدون أن يُعيق ظهور النتائج أو يُبطئ المحركات الأخرى
                     enrichWithIMDb(relevant).then(() => renderResults()).catch(() => {});
                 }
 
                 return relevant;
             } catch (err) {
-                console.error(`[${engine.name}] خطأ:`, err);
                 return [];
             } finally {
                 completedRequests++;
@@ -1248,7 +1394,7 @@ async function searchTorrents() {
     } finally {
         document.getElementById('loading').classList.add('hidden');
         setTimeout(hideProgress, 800); 
-
+        
         btn.disabled = false;
         btn.classList.remove('opacity-80', 'cursor-not-allowed');
         icon.className = 'fas fa-arrow-left text-sm';
@@ -1256,6 +1402,7 @@ async function searchTorrents() {
     }
 }
 
+// تحديث شريط الإحصائيات (مفصولة لتُستدعى أثناء البث التدريجي أيضاً)
 function updateStatsBar() {
     const av1Count = allResults.filter(r => detectCodec(r.name).codec === 'AV1').length;
     const x265Count = allResults.filter(r => detectCodec(r.name).codec === 'x265/HEVC').length;
@@ -1267,6 +1414,7 @@ function updateStatsBar() {
     document.getElementById('x264Count').textContent = x264Count;
 }
 
+// منع تكرار البحث عند الضغط المتتالي السريع (Debounce)
 let searchDebounceTimer = null;
 document.getElementById('searchInput').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
