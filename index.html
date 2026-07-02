@@ -1,11 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TorrentFinder | محرك بحث التورنت الذكي</title>
-<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3290/3290074.png">
+<title>بحث التورنت المتقدم - AV1 & x265</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,6 +16,7 @@ tailwind.config = {
                 primary: '#6366f1',
                 secondary: '#8b5cf6',
                 dark: '#0f172a',
+                darker: '#020617',
                 card: '#1e293b',
             }
         }
@@ -25,274 +24,228 @@ tailwind.config = {
 }
 </script>
 <style>
-body { font-family: 'Tajawal', sans-serif; background-color: #020617; color: #f8fafc; }
-.gradient-text { background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.02); }
-.torrent-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.05); }
-.torrent-card:hover { transform: translateY(-5px); border-color: rgba(99, 102, 241, 0.5); box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.15); }
-.codec-badge-av1 { background: linear-gradient(135deg, #059669, #10b981); }
-.codec-badge-x265 { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-.codec-badge-x264 { background: linear-gradient(135deg, #d97706, #f59e0b); }
-.codec-badge-other { background: linear-gradient(135deg, #4b5563, #6b7280); }
-.loader { border: 3px solid rgba(255,255,255,0.05); border-radius: 50%; border-top: 3px solid #818cf8; width: 36px; height: 36px; animation: spin 1s linear infinite; }
+body { font-family: 'Tajawal', sans-serif; background-color: #020617; }
+.gradient-text { background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+.torrent-card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.05); }
+.torrent-card:hover { transform: translateY(-4px); border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.3); }
+.codec-badge-av1 { background: linear-gradient(135deg, #10b981, #059669); }
+.codec-badge-x265 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.codec-badge-x264 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.codec-badge-other { background: linear-gradient(135deg, #6b7280, #4b5563); }
+.loader { border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top: 3px solid #6366f1; width: 40px; height: 40px; animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.search-input:focus { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); }
-.quality-4k { color: #fca5a5; background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.2); }
-.quality-1080 { color: #93c5fd; background: rgba(96, 165, 250, 0.1); border-color: rgba(96, 165, 250, 0.2); }
-.quality-720 { color: #6ee7b7; background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.2); }
-.btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); transition: all 0.2s; }
-.btn-primary:hover { transform: scale(1.02); box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.5); }
-.progress-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; margin-top: 8px; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #818cf8, #c084fc); transition: width 0.3s ease-out; }
-.badge-pulse { animation: pulse-soft 2s infinite; }
-@keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+.magnet-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); transition: all 0.2s; }
+.magnet-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+.quality-4k { color: #f87171; }
+.quality-1080 { color: #60a5fa; }
+.quality-720 { color: #34d399; }
+.source-badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.1); }
+.error-box { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+.success-box { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
+.info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); }
+.progress-bar { height: 4px; background: rgba(99,102,241,0.2); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.3s; }
 </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="text-gray-100 min-h-screen">
 
-<header class="fixed top-0 w-full z-50 glass shadow-lg">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-inner">
-                <i class="fas fa-magnet text-white text-lg drop-shadow-md"></i>
+<header class="fixed top-0 w-full z-50 glass">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <i class="fas fa-magnet text-white text-lg"></i>
             </div>
             <div>
-                <h1 class="text-xl font-extrabold gradient-text tracking-wide">TorrentFinder</h1>
-                <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">محرك بحث التورنت الذكي</p>
+                <h1 class="text-xl font-bold gradient-text">TorrentFinder</h1>
+                <p class="text-xs text-gray-400">بحث متقدم بترتيب الجودة</p>
             </div>
         </div>
-        <div class="hidden md:flex items-center gap-4 text-xs font-medium text-slate-400">
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> YTS</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TPB</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> EZTV</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> Nyaa</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> 1337x</span>
-            <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 badge-pulse"></span> TGx</span>
+        <div class="hidden lg:flex items-center gap-3 text-xs text-gray-400">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> YTS</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> TPB</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> EZTV</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Nyaa</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> 1337x</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> TGx</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> Lime</span>
         </div>
     </div>
 </header>
 
-<main class="flex-grow pt-32 pb-16 px-4 max-w-6xl mx-auto w-full">
-    <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-5xl font-extrabold mb-4 text-white drop-shadow-sm">ابحث عن المحتوى بأفضل جودة</h2>
-        <p class="text-slate-400 text-sm md:text-base mb-8 max-w-2xl mx-auto leading-relaxed">
-            محرك بحث متطور يقوم بالبحث المتزامن في أقوى قواعد البيانات العالمية، مع فرز تلقائي لتقديم صيغ الجيل الجديد (AV1 و x265) في الصدارة.
-        </p>
+<main class="pt-28 pb-12 px-4 max-w-7xl mx-auto">
+    <div class="text-center mb-10">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">ابحث عن أفضل جودة فيديو</h2>
+        <p class="text-gray-400 mb-8 max-w-2xl mx-auto">يتم ترتيب النتائج تلقائياً: AV1 أولاً، ثم x265/HEVC، ثم x264، ثم باقي الصيغ</p>
 
-        <div class="max-w-3xl mx-auto relative group">
-            <div class="flex gap-3 relative z-10">
-                <div class="relative flex-1">
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                        <i class="fas fa-search text-slate-500"></i>
-                    </div>
-                    <input type="text" id="searchInput" placeholder="ابحث بدقة (مثال: Inception أو Attack on Titan Season 1)..." 
-                        class="search-input w-full bg-card border border-slate-700 rounded-2xl pr-11 pl-4 py-4 text-lg outline-none text-white placeholder-slate-500 transition-all focus:border-indigo-500">
-                </div>
-                <button onclick="searchTorrents()" id="searchBtn" class="btn-primary px-8 py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 min-w-[120px]">
-                    <span id="searchText">بحث الآن</span>
-                    <i class="fas fa-arrow-left text-sm" id="searchIcon"></i>
+        <div class="max-w-3xl mx-auto relative">
+            <div class="flex gap-2">
+                <input type="text" id="searchInput" placeholder="اكتب اسم الفيلم أو المسلسل بدقة..." 
+                    class="flex-1 bg-card border border-gray-700 rounded-xl px-6 py-4 text-lg outline-none text-white placeholder-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all">
+                <button onclick="searchTorrents()" id="searchBtn" class="magnet-btn px-8 py-4 rounded-xl font-bold text-white flex items-center gap-2 min-w-[100px] justify-center">
+                    <i class="fas fa-search" id="searchIcon"></i>
+                    <span class="hidden md:inline" id="searchText">بحث</span>
                 </button>
             </div>
 
-            <div class="flex flex-wrap justify-center gap-2 mt-5">
-                <button onclick="setFilter('all')" class="filter-btn px-5 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-sm font-bold transition-colors active" data-filter="all">عرض الكل</button>
-                <button onclick="setFilter('av1')" class="filter-btn px-5 py-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors text-sm font-medium" data-filter="av1"><i class="fas fa-star mr-1 text-emerald-500"></i> AV1</button>
-                <button onclick="setFilter('x265')" class="filter-btn px-5 py-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 hover:border-blue-500/50 hover:text-blue-400 transition-colors text-sm font-medium" data-filter="x265">x265 / HEVC</button>
-                <button onclick="setFilter('x264')" class="filter-btn px-5 py-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 hover:border-amber-500/50 hover:text-amber-400 transition-colors text-sm font-medium" data-filter="x264">x264 / AVC</button>
+            <div class="flex flex-wrap justify-center gap-2 mt-4">
+                <button onclick="setFilter('all')" class="filter-btn px-4 py-2 rounded-lg bg-primary/20 text-primary border border-primary/30 text-sm font-bold active" data-filter="all">الكل</button>
+                <button onclick="setFilter('av1')" class="filter-btn px-4 py-2 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 hover:border-green-500/50 hover:text-green-400 transition-all text-sm font-medium" data-filter="av1"><i class="fas fa-star mr-1"></i> AV1</button>
+                <button onclick="setFilter('x265')" class="filter-btn px-4 py-2 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 hover:border-blue-500/50 hover:text-blue-400 transition-all text-sm font-medium" data-filter="x265">x265 / HEVC</button>
+                <button onclick="setFilter('x264')" class="filter-btn px-4 py-2 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 hover:border-yellow-500/50 hover:text-yellow-400 transition-all text-sm font-medium" data-filter="x264">x264 / AVC</button>
             </div>
         </div>
     </div>
 
-    <div id="progressArea" class="hidden max-w-3xl mx-auto mb-8 bg-card border border-slate-700 rounded-2xl p-4 shadow-lg">
-        <div class="flex justify-between text-xs font-medium text-slate-300 mb-2">
-            <span id="progressText" class="flex items-center gap-2"><i class="fas fa-circle-notch fa-spin text-indigo-400"></i> جاري جلب البيانات...</span>
-            <span id="progressPercent" class="text-indigo-400 font-bold">0%</span>
+    <div id="progressArea" class="hidden max-w-3xl mx-auto mb-4">
+        <div class="flex justify-between text-xs text-gray-400 mb-1">
+            <span id="progressText">جاري البحث...</span>
+            <span id="progressPercent">0%</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width: 0%"></div></div>
     </div>
 
-    <div id="statusMsg" class="hidden max-w-3xl mx-auto mb-8 rounded-2xl p-4 text-sm font-medium text-center border"></div>
+    <div id="statusMsg" class="hidden max-w-3xl mx-auto mb-6 rounded-xl p-4 text-sm"></div>
 
-    <div id="statsBar" class="hidden mb-8 glass rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-700">
-        <div class="flex items-center gap-4 text-sm flex-wrap justify-center">
-            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">النتائج:</span> <span id="totalResults" class="text-white font-bold">0</span></div>
-            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">AV1:</span> <span id="av1Count" class="text-emerald-400 font-bold">0</span></div>
-            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">x265:</span> <span id="x265Count" class="text-blue-400 font-bold">0</span></div>
-            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><span class="text-slate-400 ml-1">x264:</span> <span id="x264Count" class="text-amber-400 font-bold">0</span></div>
+    <div id="statsBar" class="hidden mb-6 glass rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-6 text-sm flex-wrap">
+            <span class="text-gray-400">النتائج: <span id="totalResults" class="text-white font-bold">0</span></span>
+            <span class="text-gray-400">AV1: <span id="av1Count" class="text-green-400 font-bold">0</span></span>
+            <span class="text-gray-400">x265: <span id="x265Count" class="text-blue-400 font-bold">0</span></span>
+            <span class="text-gray-400">x264: <span id="x264Count" class="text-yellow-400 font-bold">0</span></span>
         </div>
-        <div class="flex items-center gap-2 bg-slate-800 p-1.5 rounded-xl border border-slate-700 w-full md:w-auto">
-            <i class="fas fa-sort-amount-down text-slate-400 mr-2 text-sm"></i>
-            <select id="sortSelect" onchange="renderResults()" class="bg-transparent border-none text-sm outline-none text-white w-full md:w-auto cursor-pointer focus:ring-0">
-                <option value="relevance" class="bg-slate-800">الأكثر تطابقاً للبحث</option>
-                <option value="codec" class="bg-slate-800">جودة الترميز (Codec)</option>
-                <option value="quality" class="bg-slate-800">دقة العرض (Resolution)</option>
-                <option value="size" class="bg-slate-800">حجم الملف</option>
-                <option value="seeds" class="bg-slate-800">المزودون (Seeders)</option>
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-400">الترتيب:</span>
+            <select id="sortSelect" onchange="renderResults()" class="bg-card border border-gray-700 rounded-lg px-3 py-1 text-sm outline-none">
+                <option value="codec">الكوديك (الجودة)</option>
+                <option value="quality">الدقة</option>
+                <option value="size">الحجم</option>
+                <option value="seeds">الموزعين (Seeds)</option>
             </select>
         </div>
     </div>
 
-    <div id="loading" class="hidden flex flex-col items-center justify-center py-24">
-        <div class="loader mb-6 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
-        <p class="text-slate-400 font-medium tracking-wide animate-pulse" id="loadingText">جاري المعالجة والفرز...</p>
+    <div id="loading" class="hidden flex flex-col items-center justify-center py-20">
+        <div class="loader mb-4"></div>
+        <p class="text-gray-400" id="loadingText">جاري البحث...</p>
     </div>
 
-    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div class="col-span-full flex flex-col items-center justify-center py-24 text-slate-500 bg-card/50 rounded-3xl border border-slate-800 border-dashed">
-            <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                <i class="fas fa-search text-3xl opacity-50"></i>
-            </div>
-            <p class="text-xl font-bold text-slate-400">لا توجد عمليات بحث حالية</p>
-            <p class="text-sm mt-2">استخدم شريط البحث بالأعلى للبدء</p>
+    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="col-span-full text-center py-20 text-gray-500">
+            <i class="fas fa-search text-6xl mb-4 opacity-20"></i>
+            <p class="text-xl">ابدأ البحث عن المحتوى الذي تريده</p>
+            <p class="text-sm mt-2">YTS + TPB + EZTV + Nyaa + 1337x + TorrentGalaxy + LimeTorrents</p>
         </div>
     </div>
 </main>
 
-<footer class="mt-auto border-t border-slate-800 bg-card/50 backdrop-blur-md">
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="flex flex-col items-center text-center">
-            <div class="flex items-center gap-2 mb-3">
-                <i class="fas fa-shield-alt text-slate-500"></i>
-                <h3 class="text-slate-300 font-bold">إخلاء مسؤولية قانوني</h3>
-            </div>
-            <p class="text-xs text-slate-500 max-w-3xl leading-relaxed">
-                موقع <strong>TorrentFinder</strong> هو مجرد أداة برمجية (محرك بحث) تقوم بجمع وفهرسة البيانات والروابط المتاحة بشكل عام على شبكة الإنترنت. نحن <strong>لا نستضيف، ولا نرفع، ولا نخزن</strong> أي ملفات تورنت أو مواد محمية بحقوق الطبع والنشر على خوادمنا. يتحمل المستخدم بمفرده المسؤولية القانونية والأخلاقية الكاملة عن كيفية استخدام الروابط المقدمة والامتثال لقوانين حقوق النشر في بلده.
-            </p>
-            <div class="mt-6 text-[10px] text-slate-600 uppercase tracking-widest font-bold">
-                &copy; 2026 TorrentFinder Search Engine. All rights reserved.
-            </div>
-        </div>
-    </div>
-</footer>
-
-<div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl shadow-emerald-500/20 hidden items-center gap-3 z-50 font-bold transition-all duration-300">
-    <i class="fas fa-check-circle text-xl"></i>
-    <span id="toastMsg">تم النسخ بنجاح!</span>
+<div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl shadow-2xl hidden items-center gap-2 z-50">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMsg">تم النسخ!</span>
 </div>
 
 <script>
 let allResults = [];
 let currentFilter = 'all';
-let currentSearchQuery = '';
-
-// تنظيف مدخلات البحث
-function sanitizeQuery(q) {
-    return q.replace(/[:;'".,\-_\[\]()!؟?]/g, ' ').replace(/\s+/g, ' ').trim();
-}
 
 function detectCodec(name) {
     const lower = name.toLowerCase();
-    if (lower.includes('av1')) return { codec: 'AV1', priority: 1, class: 'codec-badge-av1 text-white shadow-sm', icon: 'fa-crown' };
-    if (lower.includes('x265') || lower.includes('hevc') || lower.includes('h265') || lower.includes('h.265')) return { codec: 'x265/HEVC', priority: 2, class: 'codec-badge-x265 text-white shadow-sm', icon: 'fa-microchip' };
-    if (lower.includes('x264') || lower.includes('h264') || lower.includes('h.264') || lower.includes('avc')) return { codec: 'x264/AVC', priority: 3, class: 'codec-badge-x264 text-white shadow-sm', icon: 'fa-video' };
-    return { codec: 'صيغ أخرى', priority: 4, class: 'codec-badge-other text-white shadow-sm', icon: 'fa-film' };
+    if (lower.includes('av1')) return { codec: 'AV1', priority: 1, class: 'codec-badge-av1', icon: 'fa-crown' };
+    if (lower.includes('x265') || lower.includes('hevc') || lower.includes('h265') || lower.includes('h.265')) return { codec: 'x265/HEVC', priority: 2, class: 'codec-badge-x265', icon: 'fa-hd' };
+    if (lower.includes('x264') || lower.includes('h264') || lower.includes('h.264') || lower.includes('avc')) return { codec: 'x264/AVC', priority: 3, class: 'codec-badge-x264', icon: 'fa-video' };
+    return { codec: 'أخرى', priority: 4, class: 'codec-badge-other', icon: 'fa-film' };
 }
 
 function detectQuality(name) {
     const lower = name.toLowerCase();
-    if (lower.includes('2160') || lower.includes('4k') || lower.includes('uhd')) return { quality: '4K Ultra HD', priority: 1, class: 'quality-4k border' };
-    if (lower.includes('1080')) return { quality: '1080p FHD', priority: 2, class: 'quality-1080 border' };
-    if (lower.includes('720')) return { quality: '720p HD', priority: 3, class: 'quality-720 border' };
-    if (lower.includes('480')) return { quality: '480p SD', priority: 4, class: 'text-slate-400 border border-slate-600 bg-slate-800' };
-    return { quality: 'غير محددة', priority: 5, class: 'text-slate-500 border border-slate-700 bg-slate-800/50' };
+    if (lower.includes('2160') || lower.includes('4k') || lower.includes('uhd')) return { quality: '4K', priority: 1, class: 'quality-4k' };
+    if (lower.includes('1080')) return { quality: '1080p', priority: 2, class: 'quality-1080' };
+    if (lower.includes('720')) return { quality: '720p', priority: 3, class: 'quality-720' };
+    if (lower.includes('480')) return { quality: '480p', priority: 4, class: 'text-gray-400' };
+    return { quality: 'غير محدد', priority: 5, class: 'text-gray-400' };
 }
 
 function formatBytes(bytes) {
     if (!bytes || bytes === 0) return 'غير معروف';
     const sizes = ['بايت', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' <span class="text-[10px]">' + sizes[i] + '</span>';
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = String(text ?? '');
-    return div.innerHTML;
+function jsonpFetch(url) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'yts_cb_' + Math.random().toString(36).substr(2, 9);
+        const script = document.createElement('script');
+        
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            document.head.removeChild(script);
+            resolve(data);
+        };
+
+        script.onerror = () => {
+            delete window[callbackName];
+            if (script.parentNode) document.head.removeChild(script);
+            reject(new Error('JSONP failed'));
+        };
+
+        const separator = url.includes('?') ? '&' : '?';
+        script.src = url + separator + 'callback=' + callbackName;
+        document.head.appendChild(script);
+    });
 }
 
-// دالة النافذة المنبثقة الذكية للترجمة عبر OpenSubtitles
-function openSubtitlePopup(query) {
-    // تجهيز رابط OpenSubtitles المخصص للغة العربية
-    const openSubtitlesUrl = `https://www.opensubtitles.org/ar/search/sublanguageid-ara/moviename-${encodeURIComponent(query)}`;
-    
-    // إعدادات النافذة المنبثقة (أو التبويب الجديد على الهاتف)
-    const width = 900;
-    const height = 650;
-    const left = (window.screen.width / 2) - (width / 2);
-    const top = (window.screen.height / 2) - (height / 2);
-    
-    window.open(
-        openSubtitlesUrl, 
-        '_blank', 
-        `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
-    );
-    showToast('تم فتح نافذة OpenSubtitles للترجمة!');
-}
-
-// أداة جلب البيانات بـ 3 مسارات لتجنب الحظر
-async function smartFetch(url, type = 'json') {
-    const proxies = [
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        `https://corsproxy.io/?${encodeURIComponent(url)}`,
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-    ];
-
-    try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if(res.ok) return type === 'json' ? await res.json() : await res.text();
-    } catch(e) {}
-
-    for (let proxy of proxies) {
+async function smartFetch(url, isJson = true, isYTS = false) {
+    if (isYTS) {
         try {
-            const res = await fetch(proxy, { cache: 'no-store' });
-            if(res.ok) return type === 'json' ? await res.json() : await res.text();
-        } catch (e) {}
+            const data = await jsonpFetch(url);
+            return { data, method: 'jsonp' };
+        } catch(e) {
+            throw new Error('YTS JSONP failed');
+        }
     }
-    throw new Error('فشل جلب البيانات');
+
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    try {
+        const resp = await fetch(proxyUrl, { cache: 'no-store' });
+        if (resp.ok) {
+            const json = await resp.json();
+            const cleanData = json.contents;
+            const data = isJson ? (typeof cleanData === 'string' ? JSON.parse(cleanData) : cleanData) : cleanData;
+            return { data, method: 'proxy' };
+        }
+    } catch(e) {
+        console.error('Fetch error via inner proxy:', e);
+    }
+    throw new Error('Fetch failed');
 }
 
 function showToast(msg) {
     const toast = document.getElementById('toast');
     document.getElementById('toastMsg').textContent = msg;
-    toast.classList.remove('hidden', 'translate-y-10', 'opacity-0');
-    toast.classList.add('flex', 'translate-y-0', 'opacity-100');
-    setTimeout(() => { 
-        toast.classList.add('translate-y-10', 'opacity-0');
-        setTimeout(() => toast.classList.add('hidden'), 300);
-    }, 2500);
+    toast.classList.remove('hidden');
+    toast.classList.add('flex');
+    setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 2500);
 }
 
-function copyMagnet(link, btnElement) {
-    navigator.clipboard.writeText(link).then(() => {
-        showToast('تم نسخ الرابط بنجاح!');
-        const originalHtml = btnElement.innerHTML;
-        btnElement.classList.remove('btn-primary');
-        btnElement.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
-        btnElement.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
-        setTimeout(() => {
-            btnElement.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
-            btnElement.classList.add('btn-primary');
-            btnElement.innerHTML = originalHtml;
-        }, 2000);
-    });
+function copyMagnet(link) {
+    navigator.clipboard.writeText(link).then(() => showToast('تم نسخ الرابط المغناطيسي!'));
 }
 
 function setStatus(msg, type = 'info') {
     const el = document.getElementById('statusMsg');
-    el.className = "max-w-3xl mx-auto mb-8 rounded-xl p-4 text-sm font-bold border shadow-sm";
-    if (type === 'error') el.classList.add('bg-red-500/10', 'border-red-500/20', 'text-red-400');
-    else if (type === 'success') el.classList.add('bg-emerald-500/10', 'border-emerald-500/20', 'text-emerald-400');
-    else el.classList.add('bg-blue-500/10', 'border-blue-500/20', 'text-blue-400');
+    el.className = "max-w-3xl mx-auto mb-6 rounded-xl p-4 text-sm";
+    if (type === 'error') el.classList.add('error-box', 'text-red-300');
+    else if (type === 'success') el.classList.add('success-box', 'text-green-300');
+    else el.classList.add('info-box', 'text-blue-300');
     el.innerHTML = msg;
-    el.classList.remove('hidden');
 }
-
 function hideStatus() { document.getElementById('statusMsg').classList.add('hidden'); }
 
 function setProgress(text, percent) {
     const area = document.getElementById('progressArea');
     area.classList.remove('hidden');
-    document.getElementById('progressText').innerHTML = `<i class="fas fa-circle-notch fa-spin text-indigo-400 mr-2"></i> ${text}`;
+    document.getElementById('progressText').textContent = text;
     document.getElementById('progressPercent').textContent = percent + '%';
     document.getElementById('progressBar').style.width = percent + '%';
 }
@@ -302,11 +255,11 @@ function setFilter(filter) {
     currentFilter = filter;
     document.querySelectorAll('.filter-btn').forEach(btn => {
         if (btn.dataset.filter === filter) {
-            btn.classList.add('bg-indigo-500/20', 'text-indigo-300', 'border-indigo-500/30');
-            btn.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+            btn.classList.add('bg-primary/20', 'text-primary', 'border-primary/30', 'font-bold');
+            btn.classList.remove('bg-gray-800', 'text-gray-300', 'border-gray-700');
         } else {
-            btn.classList.remove('bg-indigo-500/20', 'text-indigo-300', 'border-indigo-500/30');
-            btn.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+            btn.classList.remove('bg-primary/20', 'text-primary', 'border-primary/30', 'font-bold');
+            btn.classList.add('bg-gray-800', 'text-gray-300', 'border-gray-700');
         }
     });
     renderResults();
@@ -328,17 +281,6 @@ function renderResults() {
     }
 
     filtered.sort((a, b) => {
-        if (sortType === 'relevance') {
-            const titleA = a.name.toLowerCase();
-            const titleB = b.name.toLowerCase();
-            const qWords = currentSearchQuery.toLowerCase().split(' ');
-            
-            const aStarts = titleA.startsWith(qWords[0]) ? 1 : 0;
-            const bStarts = titleB.startsWith(qWords[0]) ? 1 : 0;
-            if (aStarts !== bStarts) return bStarts - aStarts;
-            
-            return (b.seeds || 0) - (a.seeds || 0);
-        }
         if (sortType === 'codec') {
             const pa = detectCodec(a.name).priority;
             const pb = detectCodec(b.name).priority;
@@ -352,12 +294,7 @@ function renderResults() {
     });
 
     if (filtered.length === 0) {
-        grid.innerHTML = `
-            <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-500 bg-card rounded-3xl border border-slate-700">
-                <i class="fas fa-filter-slash text-5xl mb-4 text-slate-600"></i>
-                <p class="text-xl font-bold text-slate-400">لم يتم العثور على نتائج تطابق الفلتر الحالي</p>
-                <button onclick="setFilter('all')" class="mt-4 text-indigo-400 hover:text-indigo-300 underline text-sm">عرض جميع النتائج المتاحة</button>
-            </div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-500"><i class="fas fa-inbox text-6xl mb-4 opacity-20"></i><p class="text-xl">لا توجد نتائج مطابقة</p></div>`;
         return;
     }
 
@@ -369,58 +306,46 @@ function renderResults() {
         const peers = item.peers || 0;
         const source = item.source || 'Unknown';
         const magnet = item.magnet || '#';
-        const safeName = escapeHtml(item.name);
 
         return `
-        <div class="torrent-card bg-card rounded-2xl p-5 relative overflow-hidden group flex flex-col h-full">
-            <div class="absolute top-0 right-0 w-1.5 h-full ${codec.codec === 'AV1' ? 'bg-emerald-500' : codec.codec === 'x265/HEVC' ? 'bg-blue-500' : codec.codec === 'x264/AVC' ? 'bg-amber-500' : 'bg-slate-500'} opacity-80 group-hover:opacity-100 transition-opacity"></div>
-            
-            <div class="flex items-start justify-between mb-4 gap-2">
+        <div class="torrent-card bg-card rounded-xl p-5 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full ${codec.codec === 'AV1' ? 'bg-green-500' : codec.codec === 'x265/HEVC' ? 'bg-blue-500' : codec.codec === 'x264/AVC' ? 'bg-yellow-500' : 'bg-gray-500'}"></div>
+            <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="${codec.class} text-[11px] px-2.5 py-1 rounded-md font-extrabold flex items-center gap-1.5 uppercase tracking-wider"><i class="fas ${codec.icon}"></i> ${codec.codec}</span>
-                    <span class="${quality.class} text-[11px] font-bold px-2 py-1 rounded-md">${quality.quality}</span>
+                    <span class="${codec.class} text-white text-xs px-2 py-1 rounded-lg font-bold flex items-center gap-1"><i class="fas ${codec.icon}"></i> ${codec.codec}</span>
+                    <span class="${quality.class} text-xs font-bold border border-current px-2 py-1 rounded-lg opacity-80">${quality.quality}</span>
                 </div>
-                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded border border-slate-700 font-medium whitespace-nowrap"><i class="fas fa-database mr-1"></i> ${escapeHtml(source)}</span>
+                <span class="source-badge text-gray-400">${source}</span>
             </div>
-            
-            <h3 class="font-bold text-base md:text-lg mb-4 line-clamp-3 leading-snug break-words text-slate-200 group-hover:text-white transition-colors flex-grow" title="${safeName}" dir="ltr">${safeName}</h3>
-            
-            <div class="flex items-center justify-between bg-slate-900/50 p-3 rounded-xl border border-slate-800 mb-4">
-                <div class="flex items-center gap-2 text-slate-400 text-sm font-medium">
-                    <i class="fas fa-hdd text-slate-500"></i> <span dir="ltr">${size}</span>
-                </div>
-                <div class="flex gap-3 text-sm font-bold">
-                    <span class="flex items-center gap-1 text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded" title="المزودون (Seeders)"><i class="fas fa-arrow-up text-[10px]"></i> ${seeds}</span>
-                    <span class="flex items-center gap-1 text-red-400 bg-red-400/10 px-2 py-0.5 rounded" title="المحملون (Leechers)"><i class="fas fa-arrow-down text-[10px]"></i> ${peers}</span>
-                </div>
+            <h3 class="font-bold text-lg mb-2 line-clamp-2 leading-relaxed break-words" title="${item.name}">${item.name}</h3>
+            <div class="flex flex-wrap gap-3 text-sm text-gray-400 mb-4">
+                <span class="flex items-center gap-1"><i class="fas fa-hdd text-gray-500"></i> ${size}</span>
+                <span class="flex items-center gap-1 text-green-400"><i class="fas fa-arrow-up"></i> ${seeds}</span>
+                <span class="flex items-center gap-1 text-red-400"><i class="fas fa-arrow-down"></i> ${peers}</span>
             </div>
-            
-            <div class="flex gap-2 mt-auto pt-2">
-                <button onclick="copyMagnet('${escapeHtml(magnet)}', this)" class="flex-1 btn-primary py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all" title="نسخ رابط التحميل">
-                    <i class="fas fa-link"></i> نسخ
-                </button>
-                <button onclick="openSubtitlePopup('${escapeHtml(currentSearchQuery)}')" class="bg-slate-700 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-500 text-white flex-1 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm text-sm font-bold" title="البحث عن ترجمة عربية في OpenSubtitles">
-                    <i class="far fa-closed-captioning"></i> ترجمة
-                </button>
-                <a href="${escapeHtml(magnet)}" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white w-12 rounded-xl transition-colors flex items-center justify-center shadow-sm" title="الفتح بالتطبيق المباشر">
-                    <i class="fas fa-external-link-alt"></i>
-                </a>
+            <div class="flex gap-2">
+                <button onclick="copyMagnet('${magnet}')" class="flex-1 magnet-btn py-2.5 rounded-lg text-white text-sm font-bold flex items-center justify-center gap-2"><i class="fas fa-magnet"></i> نسخ الرابط</button>
+                <a href="${magnet}" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center" title="فتح"><i class="fas fa-external-link-alt"></i></a>
             </div>
         </div>`;
     }).join('');
 }
 
-// محركات البحث 
 async function searchYTS(query) {
     try {
+        setProgress('YTS...', 10);
         const url = 'https://yts.mx/api/v2/list_movies.json?query_term=' + encodeURIComponent(query) + '&sort_by=seeds&order_by=desc&limit=50';
-        const data = await smartFetch(url, 'json');
+        const result = await smartFetch(url, true, true);
+        const data = result.data;
         if (data && data.data && data.data.movies) {
             return data.data.movies.flatMap(movie => 
                 (movie.torrents || []).map(t => ({
                     name: movie.title + ' (' + movie.year + ') [' + t.quality + '] [' + t.type + ']',
                     magnet: 'magnet:?xt=urn:btih:' + t.hash + '&dn=' + encodeURIComponent(movie.title) + '&tr=udp://tracker.opentrackr.org:1337/announce',
-                    size: t.size_bytes, seeds: t.seeds || 0, peers: t.peers || 0, source: 'YTS'
+                    size: t.size_bytes,
+                    seeds: t.seeds || 0,
+                    peers: t.peers || 0,
+                    source: 'YTS'
                 }))
             );
         }
@@ -430,13 +355,18 @@ async function searchYTS(query) {
 
 async function searchTPB(query) {
     try {
+        setProgress('The Pirate Bay...', 25);
         const url = 'https://apibay.org/q.php?q=' + encodeURIComponent(query) + '&cat=200';
-        const data = await smartFetch(url, 'json');
+        const result = await smartFetch(url, true, false);
+        const data = result.data;
         if (Array.isArray(data)) {
             return data.filter(item => item.id !== '0' && item.name).map(item => ({
                 name: item.name,
                 magnet: 'magnet:?xt=urn:btih:' + item.info_hash + '&dn=' + encodeURIComponent(item.name) + '&tr=udp://tracker.opentrackr.org:1337/announce',
-                size: parseInt(item.size) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'The Pirate Bay'
+                size: parseInt(item.size) || 0,
+                seeds: parseInt(item.seeders) || 0,
+                peers: parseInt(item.leechers) || 0,
+                source: 'TPB'
             }));
         }
         return [];
@@ -445,12 +375,18 @@ async function searchTPB(query) {
 
 async function searchEZTV(query) {
     try {
+        setProgress('EZTV...', 40);
         const url = 'https://eztv.re/api/get-torrents?limit=50&search=' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json');
+        const result = await smartFetch(url, true, false);
+        const data = result.data;
         if (data && data.torrents && Array.isArray(data.torrents)) {
             return data.torrents.map(t => ({
-                name: t.title || 'Unknown', magnet: t.magnet_url || '#',
-                size: parseInt(t.size_bytes) || 0, seeds: parseInt(t.seeds) || 0, peers: parseInt(t.peers) || 0, source: 'EZTV'
+                name: t.title || 'Unknown',
+                magnet: t.magnet_url || '#',
+                size: parseInt(t.size_bytes) || 0,
+                seeds: parseInt(t.seeds) || 0,
+                peers: parseInt(t.peers) || 0,
+                source: 'EZTV'
             }));
         }
         return [];
@@ -459,10 +395,11 @@ async function searchEZTV(query) {
 
 async function searchNyaa(query) {
     try {
-        const url = 'https://nyaa.si/?page=rss&q=' + encodeURIComponent(query) + '&c=0_0&f=0';
-        const text = await smartFetch(url, 'text');
+        setProgress('Nyaa Anime...', 55);
+        const url = 'https://nyaa.si/?page=rss&term=' + encodeURIComponent(query) + '&c=0_0&f=0';
+        const result = await smartFetch(url, false, false);
         const parser = new DOMParser();
-        const xml = parser.parseFromString(text, 'text/xml');
+        const xml = parser.parseFromString(result.data, 'text/xml');
         const items = xml.querySelectorAll('item');
         return Array.from(items).map(item => {
             const title = item.querySelector('title')?.textContent || 'Unknown';
@@ -475,8 +412,12 @@ async function searchNyaa(query) {
             else if (sizeStr.includes('MiB')) sizeBytes = parseFloat(sizeStr) * 1024 * 1024;
             else if (sizeStr.includes('KiB')) sizeBytes = parseFloat(sizeStr) * 1024;
             return {
-                name: title, magnet: link.startsWith('magnet') ? link : '#',
-                size: sizeBytes, seeds: 0, peers: 0, source: 'Nyaa Anime'
+                name: title,
+                magnet: link.startsWith('magnet') ? link : '#',
+                size: sizeBytes,
+                seeds: 0,
+                peers: 0,
+                source: 'Nyaa'
             };
         });
     } catch (e) { return []; }
@@ -484,12 +425,20 @@ async function searchNyaa(query) {
 
 async function search1337x(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/1337x/' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json');
-        if (Array.isArray(data)) {
-            return data.map(item => ({
-                name: item.name || item.title, magnet: item.magnet,
-                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: '1337x'
+        setProgress('1337x...', 70);
+        const url = 'https://1337x.to/api/v1/search?q=' + encodeURIComponent(query);
+        const result = await smartFetch('https://api.apilayer.com/torrent/search?query=' + encodeURIComponent(query) + '&source=1337x', true, false);
+        // في حال فشل الـ API المخصص، نلجأ للـ Scraper المفتوح المعتمد على البروكسي لقراءة الأبيوم المشابه لـ Torrent API البديل
+        const urlAlt = 'https://torrent-api-py.vercel.net/api/v1/1337x/' + encodeURIComponent(query);
+        const resAlt = await smartFetch(urlAlt, true, false);
+        if (Array.isArray(resAlt.data)) {
+            return resAlt.data.map(item => ({
+                name: item.name || item.title,
+                magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0,
+                seeds: parseInt(item.seeders) || 0,
+                peers: parseInt(item.leechers) || 0,
+                source: '1337x'
             }));
         }
         return [];
@@ -498,12 +447,17 @@ async function search1337x(query) {
 
 async function searchTorrentGalaxy(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/tgx/' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json');
-        if (Array.isArray(data)) {
-            return data.map(item => ({
-                name: item.name || item.title, magnet: item.magnet,
-                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'TorrentGalaxy'
+        setProgress('TorrentGalaxy...', 80);
+        const url = 'https://torrent-api-py.vercel.net/api/v1/tgx/' + encodeURIComponent(query);
+        const result = await smartFetch(url, true, false);
+        if (Array.isArray(result.data)) {
+            return result.data.map(item => ({
+                name: item.name || item.title,
+                magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0,
+                seeds: parseInt(item.seeders) || 0,
+                peers: parseInt(item.leechers) || 0,
+                source: 'TorrentGalaxy'
             }));
         }
         return [];
@@ -512,12 +466,17 @@ async function searchTorrentGalaxy(query) {
 
 async function searchLimeTorrents(query) {
     try {
-        const url = 'https://torrent-api-py.vercel.app/api/v1/limetorrents/' + encodeURIComponent(query);
-        const data = await smartFetch(url, 'json');
-        if (Array.isArray(data)) {
-            return data.map(item => ({
-                name: item.name || item.title, magnet: item.magnet,
-                size: parseInt(item.size_bytes) || 0, seeds: parseInt(item.seeders) || 0, peers: parseInt(item.leechers) || 0, source: 'LimeTorrents'
+        setProgress('LimeTorrents...', 90);
+        const url = 'https://torrent-api-py.vercel.net/api/v1/limetorrents/' + encodeURIComponent(query);
+        const result = await smartFetch(url, true, false);
+        if (Array.isArray(result.data)) {
+            return result.data.map(item => ({
+                name: item.name || item.title,
+                magnet: item.magnet,
+                size: parseInt(item.size_bytes) || 0,
+                seeds: parseInt(item.seeders) || 0,
+                peers: parseInt(item.leechers) || 0,
+                source: 'LimeTorrents'
             }));
         }
         return [];
@@ -525,15 +484,8 @@ async function searchLimeTorrents(query) {
 }
 
 async function searchTorrents() {
-    const rawQuery = document.getElementById('searchInput').value;
-    const cleanQuery = sanitizeQuery(rawQuery);
-    
-    if (!cleanQuery) {
-        setStatus('<i class="fas fa-info-circle mr-2"></i> يرجى إدخال اسم العمل للبدء في البحث.', 'info');
-        return;
-    }
-
-    currentSearchQuery = cleanQuery;
+    const query = document.getElementById('searchInput').value.trim();
+    if (!query) return;
 
     document.getElementById('loading').classList.remove('hidden');
     document.getElementById('statsBar').classList.add('hidden');
@@ -544,50 +496,34 @@ async function searchTorrents() {
     const btn = document.getElementById('searchBtn');
     const icon = document.getElementById('searchIcon');
     const txt = document.getElementById('searchText');
-    
     btn.disabled = true;
-    btn.classList.add('opacity-80', 'cursor-not-allowed');
-    icon.className = 'fas fa-circle-notch fa-spin text-sm';
-    txt.textContent = 'جاري البحث';
-
-    setProgress('جاري إنشاء قنوات الاتصال بخوادم التورنت...', 5);
-
-    const engines = [
-        { name: 'YTS', func: searchYTS, delay: 0 },
-        { name: 'TPB', func: searchTPB, delay: 0 },
-        { name: 'EZTV', func: searchEZTV, delay: 0 },
-        { name: 'Nyaa', func: searchNyaa, delay: 100 },
-        { name: '1337x', func: search1337x, delay: 0 },
-        { name: 'TGx', func: searchTorrentGalaxy, delay: 300 },
-        { name: 'Lime', func: searchLimeTorrents, delay: 600 }
-    ];
-
-    let completedRequests = 0;
-    const totalRequests = engines.length;
+    icon.className = 'fas fa-spinner fa-spin';
+    txt.textContent = '...';
 
     try {
-        const promises = engines.map(async (engine) => {
-            if (engine.delay > 0) {
-                await new Promise(resolve => setTimeout(resolve, engine.delay));
-            }
-            try {
-                const res = await engine.func(cleanQuery);
-                return res || [];
-            } catch (err) {
-                return [];
-            } finally {
-                completedRequests++;
-                const currentPercent = Math.min(Math.round((completedRequests / totalRequests) * 100), 95);
-                setProgress(`تم جلب بيانات ${completedRequests} من أصل ${totalRequests} قواعد بيانات...`, currentPercent);
-            }
-        });
+        const results = await Promise.allSettled([
+            searchYTS(query),
+            searchTPB(query),
+            searchEZTV(query),
+            searchNyaa(query),
+            search1337x(query),
+            searchTorrentGalaxy(query),
+            searchLimeTorrents(query)
+        ]);
 
-        const resultsArray = await Promise.all(promises);
-        allResults = resultsArray.flat();
-        setProgress('تم استكمال سحب البيانات، جاري فرز النتائج...', 100);
+        const yts = results[0].status === 'fulfilled' ? results[0].value : [];
+        const tpb = results[1].status === 'fulfilled' ? results[1].value : [];
+        const eztv = results[2].status === 'fulfilled' ? results[2].value : [];
+        const nyaa = results[3].status === 'fulfilled' ? results[3].value : [];
+        const s1337x = results[4].status === 'fulfilled' ? results[4].value : [];
+        const tgx = results[5].status === 'fulfilled' ? results[5].value : [];
+        const lime = results[6].status === 'fulfilled' ? results[6].value : [];
+
+        allResults = [...yts, ...tpb, ...eztv, ...nyaa, ...s1337x, ...tgx, ...lime];
+        setProgress('جاري الترتيب والفلترة...', 95);
 
         if (allResults.length === 0) {
-            setStatus('<i class="fas fa-exclamation-triangle mr-2 text-lg"></i> عذراً، لم نتمكن من العثور على أي نتائج. <strong>تلميح:</strong> للأنمي والمسلسلات جرب كتابة (Season 1) بدلاً من (S01).', 'error');
+            setStatus('<i class="fas fa-exclamation-circle ml-2"></i> تعذر العثور على أي نتائج، يرجى التحقق من صياغة الاسم أو جرب مجدداً لاحقاً.', 'error');
         } else {
             hideStatus();
         }
@@ -601,20 +537,16 @@ async function searchTorrents() {
         document.getElementById('x265Count').textContent = x265Count;
         document.getElementById('x264Count').textContent = x264Count;
         document.getElementById('statsBar').classList.remove('hidden');
-        
-        document.getElementById('sortSelect').value = 'relevance';
 
         renderResults();
     } catch (error) {
-        setStatus('<i class="fas fa-wifi mr-2"></i> حدث خطأ في الشبكة، يرجى التحقق من اتصالك والمحاولة مرة أخرى.', 'error');
+        setStatus('<i class="fas fa-exclamation-triangle ml-2"></i> خطأ غير متوقع أثناء معالجة البيانات.', 'error');
     } finally {
         document.getElementById('loading').classList.add('hidden');
-        setTimeout(hideProgress, 800); 
-        
+        hideProgress();
         btn.disabled = false;
-        btn.classList.remove('opacity-80', 'cursor-not-allowed');
-        icon.className = 'fas fa-arrow-left text-sm';
-        txt.textContent = 'بحث الآن';
+        icon.className = 'fas fa-search';
+        txt.textContent = 'بحث';
     }
 }
 
